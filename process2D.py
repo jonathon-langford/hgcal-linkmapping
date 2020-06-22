@@ -192,7 +192,10 @@ def getBundledlpgbtHists2D(minigroup_hists,bundles):
     return bundled_lpgbthists_list
 
 def calculateChiSquared_modif(inclusive,grouped,root=False):
-
+    
+    #n_occup_phi = 0
+    #Max_n_occup_phi = 0
+    #n_binPhi = grouped[0][0].shape[-1] #num of bins in phi
     chi2_total = 0
     for i in range(2):
         for key,hist in grouped[i].items():
@@ -204,6 +207,12 @@ def calculateChiSquared_modif(inclusive,grouped,root=False):
                  for b in range(42):
                      squared_diff = np.power(hist[b].sum()-inclusive[i].GetBinContent(b+1)/24, 2 ) #sum() used to project 2D to 1D R/Z   
                      chi2_total+=squared_diff
+                 #for phi_bin in range(n_binPhi):
+                 #   if (hist[:,phi_bin].sum()>0):
+                 #       n_occup_phi += 1
+                 #if (n_occup_phi > Max_n_occup_phi):
+                 #   Max_n_occup_phi = n_occup_phi
+                    
                 
     return chi2_total
 
