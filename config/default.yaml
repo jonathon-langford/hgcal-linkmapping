@@ -10,19 +10,19 @@ output_dir: .
 study_mapping:
   MappingFile: data/FeMappingV7.txt
   CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_neutrino_gun_20200611.root 
-  algorithm: save_root
-  #algorithm: random_hill_climb
+  #algorithm: save_root
+  algorithm: random_hill_climb
   #algorithm: simulated_annealing
   # algorithm: genetic_alg      
   #initial_state: bestsofar
-  #initial_state: random
-  initial_state: bundles_job_default.npy
+  initial_state: random
+  #initial_state: bundles_job_default.npy
   random_seed: ~
-  max_iterations: 100
+  max_iterations: 1000
   #minigroup_type: 'bylayer_silicon_seprated'
   #minigroup_type: 'bylayer'
   minigroup_type: 'minimal'
-  coef_chi2: 0.1 
+  chi2_coef: 0.1 
 
 check_for_missing_modules:
   inCMSSW: True

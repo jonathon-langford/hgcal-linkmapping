@@ -191,14 +191,16 @@ def getBundledlpgbtHists2D(minigroup_hists,bundles):
 
     return bundled_lpgbthists_list
 
-def calculateChiSquared_modif(inclusive,grouped,root=False):
+def calculateChiSquared_modif(inclusive,grouped,chi2_coef,root=False):
     
-    #n_occup_phi = 0
-    #Max_n_occup_phi = 0
-    #n_binPhi = grouped[0][0].shape[-1] #num of bins in phi
+    n_occup = 0
+    Max_n_occup = 0
+    n_binEta = grouped[0][0].shape[0] # num of bins in eta (now 42)
+    n_binPhi = grouped[0][0].shape[1] # num of bins in phi (now 12)
+    
     chi2_total = 0
-    for i in range(2):
-        for key,hist in grouped[i].items():
+    for i in range(2): # i=0 (1) is inclusive (phi<60)
+        for key,hist in grouped[i].items(): # now there are 24 bundles, thus 24 hists
             if(root):
                  for b in range(1,43):
                      squared_diff = np.power(hist.ProjectionX().GetBinContent(b) - inclusive[i].GetBinContent(b)/24, 2 )   
@@ -207,12 +209,17 @@ def calculateChiSquared_modif(inclusive,grouped,root=False):
                  for b in range(42):
                      squared_diff = np.power(hist[b].sum()-inclusive[i].GetBinContent(b+1)/24, 2 ) #sum() used to project 2D to 1D R/Z   
                      chi2_total+=squared_diff
-                 #for phi_bin in range(n_binPhi):
-                 #   if (hist[:,phi_bin].sum()>0):
-                 #       n_occup_phi += 1
-                 #if (n_occup_phi > Max_n_occup_phi):
-                 #   Max_n_occup_phi = n_occup_phi
+                 
+                 n_occup = 0
+                 for i_eta, i_phi in np.ndindex(hist.shape):
+                    if hist[i_eta, i_phi]>0:
+                        n_occup += 1
+                 if (n_occup > Max_n_occup):
+                    Max_n_occup = n_occup
+    
+    typicalchi2 = 600000000000 
+    chi2_add = chi2_coef * typicalchi2 * Max_n_occup/(n_binPhi*n_binEta)
                     
-                
-    return chi2_total
+    print ("TESTTTTTT. Chi2=", chi2_total, "  Max_n_occup/total=", Max_n_occup/(n_binPhi*n_binEta), " chi2_add/total=" ,chi2_add/chi2_total)            
+    return chi2_total + chi2_add
 
