@@ -24,8 +24,11 @@ from geometryCorrections import applyGeometryCorrections
 chi2_min = 50000000000000000000000
 combbest = []
 
+class exitProgramSignal(LookupError):
+   pass
+ 
 def handler(signum, frame):
-    raise ValueError()    
+    raise exitProgramSignal()    
 
 def plot_lpGBTLoads(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
 
@@ -336,7 +339,7 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
                 best_state, best_fitness = mlrose.simulated_annealing(problem_cust, schedule = schedule, max_attempts = 100000, max_iters = 10000000, init_state = init_state, random_state=random_seed)
                 
 
-        except ValueError:
+        except exitProgramSignal:
             print("interrupt received, stopping and saving")
 
         finally:
