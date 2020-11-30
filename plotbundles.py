@@ -3,8 +3,9 @@ import ROOT
 ROOT.gROOT.SetBatch(1)
 import sys
 import yaml
+import pickle
 import numpy as np
-from process import loadDataFile,loadModuleTowerMappingFile,getMinilpGBTGroups,getBundles,getBundledlpgbtHistsRoot,getMiniGroupHists,getMinilpGBTGroups,getModuleHists,getlpGBTHists,getNumberOfModulesInEachBundle,getMiniModuleGroups,getMiniTowerGroups,getTowerBundles
+from process import loadDataFile,loadModuleTowerMappingFile,getMinilpGBTGroups,getBundles,getBundledlpgbtHistsRoot,getMiniGroupHists,getMinilpGBTGroups,getModuleHists,getlpGBTHists,getNumberOfModulesInEachBundle,getMiniModuleGroups,getMiniTowerGroups,getTowerBundles, calculateChiSquared
 from geometryCorrections import applyGeometryCorrections
 from root_numpy import hist2array
 import matplotlib.pyplot as pl
@@ -117,8 +118,8 @@ def main():
 
 
     if useConfiguration:
-        
-        init_state = np.hstack(np.load(filein_str,allow_pickle=True))
+        with open(filein_str, "rb") as filep:   
+            init_state = np.hstack(pickle.load(filep))
         MappingFile = config['npy_configuration']['mappingFile']
         TowerMappingFile = config['npy_configuration']['towerMappingFile']
         CMSSW_ModuleHists = config['npy_configuration']['CMSSW_ModuleHists']
@@ -157,7 +158,8 @@ def main():
 
         minigroups_towers = getMiniTowerGroups(towerdata, minigroups_modules)
         bundled_towers = getTowerBundles(minigroups_towers, bundles)
-            
+        max_towers = len(max(bundled_towers,key=len))
+        print ("max towers = ", max_towers)
         inclusive = inclusive_hists_input[0].Clone("inclusive_hists_input_inclusive")
         inclusive.Add( inclusive_hists_input[1] )
         phidivisionX = inclusive_hists_input[0].Clone("inclusive_hists_input_phidivisionX")

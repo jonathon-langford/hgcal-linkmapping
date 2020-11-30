@@ -7,6 +7,7 @@ import mlrose_mod as mlrose # Author: Genevieve Hayes https://github.com/gkhayes
 import time
 import yaml
 import signal
+import pickle
 
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
@@ -58,7 +59,8 @@ def produce_AllocationFile(MappingFile,allocation,minigroup_type="minimal"):
     data = loadDataFile(MappingFile) 
 
     #List of which minigroups are assigned to each bundle 
-    configuration = np.hstack(np.load(allocation,allow_pickle=True))
+    with open(allocation, "rb") as filep:   
+        configuration = np.hstack(pickle.load(filep))
 
     #Get minigroups
     minigroups,minigroups_swap = getMinilpGBTGroups(data, minigroup_type)
@@ -95,7 +97,8 @@ def produce_nTCsPerModuleHists(MappingFile,allocation,CMSSW_ModuleHists,minigrou
     data = loadDataFile(MappingFile) 
 
     #List of which minigroups are assigned to each bundle 
-    configuration = np.hstack(np.load(allocation,allow_pickle=True))
+    with open(allocation, "rb") as filep:   
+        configuration = np.hstack(pickle.load(filep))
 
     #Get minigroups
     minigroups,minigroups_swap = getMinilpGBTGroups(data, minigroup_type)
@@ -267,7 +270,9 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
         init_state = example_minigroup_configuration
     if (initial_state[-4:] == ".npy"):
         print (initial_state)
-        init_state = np.hstack(np.load(initial_state,allow_pickle=True))
+        with open(initial_state, "rb") as filep:   
+            init_state = np.hstack(pickle.load(filep))
+
         if ( len(init_state) != len(minigroups_swap) ):
             print ( "Initial state should be the same length as the number of mini groups")
             exit()
@@ -302,7 +307,8 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
 
         chi2 = calculateChiSquared(inclusive_hists,bundled_hists)
         newfile = ROOT.TFile("lpgbt_10.root","RECREATE")
-        np.save(output_dir + "/" + filename + "_saveroot.npy",np.array(bundles,dtype=object))
+        with open( output_dir + "/" + filename + ".npy", "wb") as filep:
+            pickle.dump(bundles, filep)
         for sector in bundled_hists_root:
             for key, value in sector.items():
                 value.Write()
@@ -335,7 +341,8 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
 
         finally:
             bundles = getBundles(minigroups_swap,combbest)
-            np.save(output_dir + "/" + filename + ".npy",np.array(bundles,dtype=object))
+            with open( output_dir + "/" + filename + ".npy", "wb") as filep:
+                pickle.dump(bundles, filep)
             file1 = open(output_dir + "/chi2_"+filenumber+".txt","a")
             file1.write( "bundles[" + filenumber + "] = " + str(chi2_min) + "\n" )
             file1.close( )
