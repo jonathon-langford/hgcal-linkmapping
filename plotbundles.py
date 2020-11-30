@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import ROOT
 ROOT.gROOT.SetBatch(1)
-import sys
+import sys,os
 import yaml
 import pickle
 import numpy as np
@@ -10,8 +10,9 @@ from geometryCorrections import applyGeometryCorrections
 from root_numpy import hist2array
 import matplotlib.pyplot as pl
 
-def print_numpy_plot(hists,plotname):
+def print_numpy_plot(hists,outdir,plotname):
 
+    os.system("mkdir -p " + outdir)
     inclusive_hists = np.histogram( np.empty(0), bins = 42, range = (0.076,0.58) )
 
     numpy_hists = []
@@ -22,11 +23,12 @@ def print_numpy_plot(hists,plotname):
         pl.step(inclusive_hists[1], np.append(bundle,bundle[-1]), where = 'post' )
 
     pl.ylim((0,1100000))
-    pl.savefig( plotname + ".png" )
+    pl.savefig( outdir + "/" + plotname + ".png" )
     pl.clf()
     
-def print_ratio_plot(inclusive,individual,ratio,plotname):
-    
+def print_ratio_plot(inclusive,individual,ratio,outdir,plotname):
+
+    os.system("mkdir -p " + outdir)
     c1 = ROOT.TCanvas("c1","",800,600)
 
     p1 = ROOT.TPad( "p1","",0.0,0.351,1.0,1.0,0,0,0)
@@ -75,7 +77,7 @@ def print_ratio_plot(inclusive,individual,ratio,plotname):
         hist.GetYaxis().SetTitleOffset(2.0);
 
     c1.Draw()
-    c1.Print( plotname + ".png" )
+    c1.Print( outdir + "/" + plotname + ".png" )
 
 def main():
 
@@ -120,9 +122,11 @@ def main():
     if useConfiguration:
         with open(filein_str, "rb") as filep:   
             init_state = np.hstack(pickle.load(filep))
+        output_dir = config['output_dir']
         MappingFile = config['npy_configuration']['mappingFile']
         TowerMappingFile = config['npy_configuration']['towerMappingFile']
         CMSSW_ModuleHists = config['npy_configuration']['CMSSW_ModuleHists']
+
         phisplitConfig = None
         if 'phisplit' in config['npy_configuration'].keys():
             phisplitConfig = config['npy_configuration']['phisplit']
@@ -199,6 +203,7 @@ def main():
         bundled_hists = None
 
     elif useROOT:
+        output_dir = "."
         phidivisionX = filein.Get("ROverZ_PhiDivisionX")
         phidivisionY = filein.Get("ROverZ_PhiDivisionY")
         ROOT.TH1.Add(phidivisionX,phidivisionY)
@@ -222,13 +227,13 @@ def main():
             phidivisionY_hists_ratio[-1].Divide( phidivisionY  )
             inclusive_hists_ratio_to_phidivisionY[-1].Divide( phidivisionY  )            
 
-    print_numpy_plot( inclusive_hists, "numpy_inclusive")
-    print_numpy_plot( phidivisionX_hists, "numpy_phidivisionX")
-    print_numpy_plot( phidivisionY_hists, "numpy_phidivisionY")
+    print_numpy_plot( inclusive_hists, outdir = output_dir, plotname = "numpy_inclusive")
+    print_numpy_plot( phidivisionX_hists, outdir = output_dir, plotname = "numpy_phidivisionX")
+    print_numpy_plot( phidivisionY_hists, outdir = output_dir, plotname = "numpy_phidivisionY")
 
-    print_ratio_plot(inclusive,inclusive_hists,inclusive_hists_ratio,"inclusive")
-    print_ratio_plot(phidivisionX,phidivisionX_hists,phidivisionX_hists_ratio,"phidivisionX")
-    print_ratio_plot(phidivisionY,phidivisionY_hists,phidivisionY_hists_ratio,"phidivisionY")
-    print_ratio_plot(inclusive,inclusive_hists,inclusive_hists_ratio_to_phidivisionY,"inclusive_to_phidivisionY")
+    print_ratio_plot(inclusive,inclusive_hists,inclusive_hists_ratio, outdir = output_dir, plotname = "inclusive")
+    print_ratio_plot(phidivisionX,phidivisionX_hists,phidivisionX_hists_ratio, outdir = output_dir, plotname = "phidivisionX")
+    print_ratio_plot(phidivisionY,phidivisionY_hists,phidivisionY_hists_ratio, outdir = output_dir, plotname = "phidivisionY")
+    print_ratio_plot(inclusive,inclusive_hists,inclusive_hists_ratio_to_phidivisionY, outdir = output_dir, plotname = "inclusive_to_phidivisionY")
 
 main()
