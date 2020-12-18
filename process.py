@@ -718,7 +718,7 @@ def getMaximumNumberOfModulesInABundle(minigroups_modules,bundles):
     maximum = max(getNumberOfModulesInEachBundle( minigroups_modules,bundles ))
     return maximum
 
-def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=1000,max_towers=None,weight_max_towers=1000):
+def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=1000,max_towers=None,weight_max_towers=1000,weight_proportionally=True):
 
     use_error_squares = False
     #Check if the minigroup_hists were produced
@@ -752,14 +752,21 @@ def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=10
                     squared_diff = np.power(hist[b]-inclusive[i].GetBinContent(b+1)/24, 2 )
                     chi2_total+=squared_diff
                 else:
-                    squared_diff = np.power(hist[b][0]-inclusive[i].GetBinContent(b+1)/24, 2 )
+                    weight_p = 1.0
+                    if weight_proportionally:
+                        if hist[b][0] > 0:
+                            weight_p = hist[b][0]/500.
+
+                    squared_diff = np.power(hist[b][0]-inclusive[i].GetBinContent(b+1)/24, 2 ) / weight_p
+
                     squared_error = hist[b][1]
 
                     if ( squared_error == 0 ):
                         squared_error = inclusive[i].GetBinError(b+1)/24
-
+                    
                     if ( squared_error != 0 ):
                         chi2_total+=(squared_diff/squared_error)
+
 
     if use_max_modules:
         chi2_total += weight_max_modules * max_modules

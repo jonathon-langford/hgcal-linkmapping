@@ -159,7 +159,7 @@ def main():
         bundled_hists = getBundledlpgbtHistsRoot(minigroup_hists_root,bundles)
         minigroups_modules = getMiniModuleGroups(data,minigroups_swap)
         nmodules = getNumberOfModulesInEachBundle(minigroups_modules,bundles)
-
+        print ("max modules = ", max(nmodules))
         minigroups_towers = getMiniTowerGroups(towerdata, minigroups_modules)
         bundled_towers = getTowerBundles(minigroups_towers, bundles)
         max_towers = len(max(bundled_towers,key=len))
