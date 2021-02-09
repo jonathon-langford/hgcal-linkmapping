@@ -250,7 +250,6 @@ def getReverseTruncationValues( dataA, dataB, maxTCsA, maxTCsB ):
     n_spare = maxTCsA - np.sum(truncation_values)
     if ( n_spare != 0):
         arg = np.argsort(truncation_values)[::np.sign(n_spare)][:int(abs(n_spare))]
-        print ( "np.sign(n_spare)", np.sign(n_spare) )
         truncation_values[arg]+=np.sign(n_spare)
         
     return truncation_values

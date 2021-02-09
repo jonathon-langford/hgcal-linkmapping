@@ -295,7 +295,7 @@ int main(int argc, char **argv){
   
     TH3D * out_words = new TH3D("out_words_hist","",15,-0.5,14.5,15,-0.5,14.5,52,0.5,52.5);
     TH3D * out_tcs = new TH3D("out_tcs_hist","",15,-0.5,14.5,15,-0.5,14.5,52,0.5,52.5);
-    TH1D * out_ntcs_per_event = new TH1D("out_ntcs_per_event_hist","",5000,-0.5,4999.5);
+    TH1D * out_ntcs_per_event = new TH1D("out_ntcs_per_event_hist","",10000,-0.5,9999.5);
 
     TH3D * out_words_scin = new TH3D("out_words_hist_scin","",5,-0.5,4.5,12,-0.5,11.5,52,0.5,52.5);
     TH3D * out_tcs_scin = new TH3D("out_tcs_hist_scin","",5,-0.5,4.5,12,-0.5,11.5,52,0.5,52.5);
