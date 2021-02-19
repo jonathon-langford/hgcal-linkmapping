@@ -58,7 +58,7 @@ truncationConfig:
 checkFluctuations:  
   beginEvent: -1
   endEvent: -1
-  initial_state: bundles_job_best_neutrinogun_200617.npy
+  initial_state: data/bundles_job_best_neutrinogun_200617.npy
   cmsswNtuple: data/small_v11_relval_ttbar_200611.root
   outputName: alldata_neutrino_gun_2006022
   mappingFile: data/FeMappingV7.txt
@@ -91,7 +91,7 @@ plot_Truncation:
 studyTruncationOptions:
   eventData: data/alldata_neutrino_gun_2006022.txt
   options_to_study: [1,2,3] #Available options: [1,2,3,4,5]
-  truncation_values_method: #Available options: original, reverse
+  truncation_values_method: original #Available options: original, reverse
   
 plot_Truncation_tc_Pt:
   eventData: data/alldata_ttbar_200813_sumpt.txt

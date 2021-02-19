@@ -182,6 +182,33 @@ inline bool file_exists (const std::string& name) {
   return (stat (name.c_str(), &buffer) == 0); 
 }
 
+unsigned get45degSector(float x, float y, float z){
+
+  std::pair<float,float> etaphi = getEtaPhi(x, y, z);
+
+  unsigned sector = 0;
+
+  if ( etaphi.second > -M_PI && etaphi.second <=  -M_PI/2 ){
+    sector = 0;
+  }
+  else if  ( etaphi.second > -M_PI/2 && etaphi.second <= 0){
+    sector = 1;
+  }
+  else if  ( etaphi.second > 0 && etaphi.second <= M_PI/2){
+    sector = 2;
+  }
+  else if  ( etaphi.second > M_PI/2 && etaphi.second <= M_PI){
+    sector = 3;
+  }
+
+  if ( z > 0 ){
+    sector += 4;
+  }
+  
+  return sector;
+  
+}
+
 int main(int argc, char **argv){  
   TH1::SetDefaultSumw2();
   TH1::AddDirectory(kFALSE);
@@ -256,6 +283,8 @@ int main(int argc, char **argv){
   
   std::vector<TH3D*> per_event_plus_scin(3);
   std::vector<TH3D*> per_event_minus_scin(3);
+
+  std::vector<int> ntcs_per_event(8);//divide into 45 degree sectors
   
   for (int i = 0;i<per_event_plus.size();i++ ){
     per_event_plus.at(i) = new TH3D(TString("per_event_plus_hist" + std::to_string(i)),"",15,-0.5,14.5,15,-0.5,14.5,52,0.5,52.5) ;
@@ -266,6 +295,7 @@ int main(int argc, char **argv){
   
     TH3D * out_words = new TH3D("out_words_hist","",15,-0.5,14.5,15,-0.5,14.5,52,0.5,52.5);
     TH3D * out_tcs = new TH3D("out_tcs_hist","",15,-0.5,14.5,15,-0.5,14.5,52,0.5,52.5);
+    TH1D * out_ntcs_per_event = new TH1D("out_ntcs_per_event_hist","",10000,-0.5,9999.5);
 
     TH3D * out_words_scin = new TH3D("out_words_hist_scin","",5,-0.5,4.5,12,-0.5,11.5,52,0.5,52.5);
     TH3D * out_tcs_scin = new TH3D("out_tcs_hist_scin","",5,-0.5,4.5,12,-0.5,11.5,52,0.5,52.5);
@@ -315,10 +345,19 @@ int main(int argc, char **argv){
       if (jentry % 100 == 0) std::cout << jentry << " / " << nentries << std::endl;;
       //if (jentry > 100 )break;
 
-      for (int j = 0;j<tc_waferu->size();j++){
+      //Reset nTCs counter
+      for (auto& x: ntcs_per_event) {
+	x = 0;
+      }
 
+      
+      for (int j = 0;j<tc_waferu->size();j++){
 	int u = tc_waferu->at(j);
 	int v = tc_waferv->at(j);
+
+	//For counting the number of TCs in a 45 degree sector
+	unsigned phisector = get45degSector(tc_x->at(j), tc_y->at(j), tc_z->at(j));
+	ntcs_per_event.at(phisector)++;
 
        	//u,v for silicon and eta,phi for scintillator
 	std::pair<int,int> coordinates = std::make_pair(u,v);
@@ -458,6 +497,10 @@ int main(int argc, char **argv){
 	words_plus_scin.at(i)->Delete();
 	words_minus_scin.at(i)->Delete();
       }
+      for (auto& x: ntcs_per_event) {
+	out_ntcs_per_event->Fill(x);
+      }
+
       nentries_looped++;
     }
 
@@ -480,7 +523,7 @@ int main(int argc, char **argv){
     for (auto& x: ROverZ_per_module) {
       x.second->Write();
     }
-
+    out_ntcs_per_event->Write();
     file_out->Close();
 
     //Create output csv
