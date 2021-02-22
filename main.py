@@ -9,11 +9,13 @@ import yaml
 import signal
 import pickle
 import json
+import re
 
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.metrics import accuracy_score
+from _ctypes import PyObj_FromPtr
 
 from process import getModuleHists, getlpGBTHists, getMiniGroupHists, getMinilpGBTGroups, getMiniModuleGroups, getBundles, getBundledlpgbtHists, getBundledlpgbtHistsRoot, calculateChiSquared, getMaximumNumberOfModulesInABundle
 from process import loadDataFile, loadModuleTowerMappingFile, getTCsPassing, getlpGBTLoadInfo, getHexModuleLoadInfo, getModuleTCHists, getMiniTowerGroups, getTowerBundles
@@ -95,6 +97,46 @@ def produce_AllocationFile(MappingFile,allocation,minigroup_type="minimal"):
                 
     fileout.close()
 
+#Code necessary for indentation:
+#from https://stackoverflow.com/questions/13249415/how-to-implement-custom-indentation-when-pretty-printing-with-the-json-module
+class NoIndent(object):
+    """ Value wrapper. """
+    def __init__(self, value):
+        self.value = value
+
+class MyEncoder(json.JSONEncoder):
+    FORMAT_SPEC = '@@{}@@'
+    regex = re.compile(FORMAT_SPEC.format(r'(\d+)'))
+
+    def __init__(self, **kwargs):
+        # Save copy of any keyword argument values needed for use here.
+        self.__sort_keys = kwargs.get('sort_keys', None)
+        super(MyEncoder, self).__init__(**kwargs)
+
+    def default(self, obj):
+        return (self.FORMAT_SPEC.format(id(obj)) if isinstance(obj, NoIndent)
+                else super(MyEncoder, self).default(obj))
+
+    def encode(self, obj):
+        format_spec = self.FORMAT_SPEC  # Local var to expedite access.
+        json_repr = super(MyEncoder, self).encode(obj)  # Default JSON.
+
+        # Replace any marked-up object ids in the JSON repr with the
+        # value returned from the json.dumps() of the corresponding
+        # wrapped Python object.
+        for match in self.regex.finditer(json_repr):
+            # see https://stackoverflow.com/a/15012814/355230
+            id = int(match.group(1))
+            no_indent = PyObj_FromPtr(id)
+            json_obj_repr = json.dumps(no_indent.value, sort_keys=self.__sort_keys)
+
+            # Replace the matched id string with json formatted representation
+            # of the corresponding Python object.
+            json_repr = json_repr.replace(
+                            '"{}"'.format(format_spec.format(id)), json_obj_repr)
+
+        return json_repr
+    
 def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal"):
 
     #Load mapping file
@@ -112,25 +154,47 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal"):
 
     #Open output file
 
-
     json_main = {}
 
-
+    stage2list = []
     stage1list = []
     #intialise empty list with number of minigroups
     lpgbtlist = [None]*len(minigroups)
+    modulelist = []
 
+    #1) Stage 1 to Stage 2 mapping (still preliminary)
+    #Assume for now each of the 18 Stage 2 FPGAs is attached to each of the Stage 1 boards
+
+    nStage2Boards = 18
+    nStage1Boards = len(bundles)
+
+    for two in range(nStage2Boards):
+        stage2dict = {}
+        stage2_stage1_list = []
+
+        for one in range(nStage1Boards):
+            stage2_stage1_list.append(one)
+        stage2dict['Stage1'] = stage2_stage1_list
+        
+        stage2list.append(NoIndent(stage2dict))
+
+    #2) LpGBT mapping to Stage 1 and modules
     for b,bundle in enumerate(bundles):
        
         stage1dict = {}
+        stage1dict["Stage2"] = []
         stage1dict["lpgbts"] = []
+
+        for two in range(nStage2Boards):
+            stage1dict["Stage2"].append(two)
+            
         for minigroup in bundle:
 
             #list lpgbts in minigroup:
             for lpgbt in minigroups_swap[minigroup]:
                 #fileout.write(str(lpgbt) + " ")
                 
-                stage1dict["lpgbts"] = lpgbt
+                stage1dict["lpgbts"].append(lpgbt)
 
                 lpgbtdict = {}
                 lpgbtdict['Stage1'] = b
@@ -149,20 +213,56 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal"):
                     lpgbt_moddict['v'] = row['v']
                     lpgbt_moddict['layer'] = row['layer']
 
-                    lpgbtdict['Modules'].append(lpgbt_moddict)
+                    lpgbtdict['Modules'].append(NoIndent(lpgbt_moddict))
 
                 lpgbtlist[lpgbt] = lpgbtdict
                 
-        stage1list.append(stage1dict)
+        stage1list.append(NoIndent(stage1dict))
 
-    json_main['Stage1'] = stage1list
-    json_main['lpgbts'] = lpgbtlist
-    
-        #fileout.close()
+    #3) Get the module mapping information directly from the input mapping file
+    for index, row in data.iterrows():
+
+        module_lpgbtlist = []
+        moduledict = {}
+
+        if ( row['density']==2 ):
+            moduledict['isSilicon'] = False
+        else:
+            moduledict['isSilicon'] = True
+        moduledict['u'] = row['u']
+        moduledict['v'] = row['v']
+        moduledict['layer'] = row['layer']
+
+        lpgbt_list = []
+        for lpgbt in range(row['nTPG']):
+            lpgbt_dict = {}
+            if lpgbt == 0:
+                lpgbt_dict['id'] = row['TPGId1']
+                lpgbt_dict['nElinks'] = row['nTPGeLinks1']
+            elif lpgbt == 1:
+                lpgbt_dict['id'] = row['TPGId2']
+                lpgbt_dict['nElinks'] = row['nTPGeLinks2']
+            else:
+                print ("Number of lpGBTs is limited to two per module")
+            lpgbt_list.append(lpgbt_dict)
+            
+        moduledict['lpgbts'] = lpgbt_list
+        modulelist.append(NoIndent(moduledict))
+
+
         
+    json_main['Stage2'] = stage2list
+    json_main['Stage1'] = stage1list
+    json_main['lpgbt'] = lpgbtlist
+    json_main['Module'] = modulelist
+
+
+    
     #Write to file
-    with open("testjson", 'w') as fp:
-        data = json.dumps(json_main, indent=2, ensure_ascii=False)
+    with open("hgcal_trigger_link_mapping_v1.json", 'w') as fp:
+        #data = json.dumps(json_main, indent=2, ensure_ascii=False)
+        data = json.dumps(json_main, ensure_ascii=False, cls=MyEncoder, indent=4)
+        #print (data)
         fp.write(data)
     
 def produce_nTCsPerModuleHists(MappingFile,allocation,CMSSW_ModuleHists,minigroup_type="minimal",correctionConfig=None):
