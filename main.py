@@ -8,6 +8,7 @@ import time
 import yaml
 import signal
 import pickle
+import json
 
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
@@ -25,7 +26,7 @@ chi2_min = 50000000000000000000000
 combbest = []
 
 class exitProgramSignal(LookupError):
-   pass
+    pass
  
 def handler(signum, frame):
     raise exitProgramSignal()    
@@ -94,6 +95,76 @@ def produce_AllocationFile(MappingFile,allocation,minigroup_type="minimal"):
                 
     fileout.close()
 
+def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal"):
+
+    #Load mapping file
+    data = loadDataFile(MappingFile)    
+
+    #List of which minigroups are assigned to each bundle 
+    with open(allocation, "rb") as filep:   
+        configuration = np.hstack(pickle.load(filep))
+
+    #Get minigroups
+    minigroups,minigroups_swap = getMinilpGBTGroups(data, minigroup_type)
+    
+    #Bundle together minigroup configuration
+    bundles = getBundles(minigroups_swap,configuration)
+
+    #Open output file
+
+
+    json_main = {}
+
+
+    stage1list = []
+    #intialise empty list with number of minigroups
+    lpgbtlist = [None]*len(minigroups)
+
+    for b,bundle in enumerate(bundles):
+       
+        stage1dict = {}
+        stage1dict["lpgbts"] = []
+        for minigroup in bundle:
+
+            #list lpgbts in minigroup:
+            for lpgbt in minigroups_swap[minigroup]:
+                #fileout.write(str(lpgbt) + " ")
+                
+                stage1dict["lpgbts"] = lpgbt
+
+                lpgbtdict = {}
+                lpgbtdict['Stage1'] = b
+                lpgbtdict['Modules'] = []
+                
+                #Get modules associated to each lpgbt:
+                data_list = data[ ((data['TPGId1']==lpgbt) | (data['TPGId2']==lpgbt)) ]
+
+                for index, row in data_list.iterrows():
+                    lpgbt_moddict = {}
+                    if ( row['density']==2 ):
+                        lpgbt_moddict['isSilicon'] = False
+                    else:
+                        lpgbt_moddict['isSilicon'] = True
+                    lpgbt_moddict['u'] = row['u']
+                    lpgbt_moddict['v'] = row['v']
+                    lpgbt_moddict['layer'] = row['layer']
+
+                    lpgbtdict['Modules'].append(lpgbt_moddict)
+
+                lpgbtlist[lpgbt] = lpgbtdict
+                
+        stage1list.append(stage1dict)
+
+    json_main['Stage1'] = stage1list
+    json_main['lpgbts'] = lpgbtlist
+    
+        #fileout.close()
+        
+    #Write to file
+    with open("testjson", 'w') as fp:
+        data = json.dumps(json_main, indent=2, ensure_ascii=False)
+        fp.write(data)
+    
 def produce_nTCsPerModuleHists(MappingFile,allocation,CMSSW_ModuleHists,minigroup_type="minimal",correctionConfig=None):
 
     #Load mapping file
@@ -422,6 +493,10 @@ def main():
     if ( config['function']['produce_nTCsPerModuleHists'] ):
         subconfig = config['produce_nTCsPerModuleHists']
         produce_nTCsPerModuleHists(subconfig['MappingFile'],subconfig['allocation'],CMSSW_ModuleHists = subconfig['CMSSW_ModuleHists'],minigroup_type=subconfig['minigroup_type'],correctionConfig=None)
+
+    if ( config['function']['produce_JsonMappingFile'] ):
+        subconfig = config['produce_JsonMappingFile']
+        produce_JsonMappingFile(subconfig['MappingFile'],subconfig['allocation'],minigroup_type=subconfig['minigroup_type'])
 
     
 main()
