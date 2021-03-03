@@ -137,7 +137,7 @@ class MyEncoder(json.JSONEncoder):
 
         return json_repr
     
-def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal"):
+def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disconnected_modules=None):
 
     #Load mapping file
     data = loadDataFile(MappingFile)    
@@ -249,8 +249,24 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal"):
         moduledict['lpgbts'] = lpgbt_list
         modulelist.append(NoIndent(moduledict))
 
+    #4) Optionally add "disconnected" modules, i.e. modules that may exist in the latest geometry, but not in the input mapping file used to produce the json output
+    #Assumes as input a ROOT tree, produced from the CMSSW geometry tester (HGCalTriggerGeomTesterV9Imp3)
+    if disconnected_modules != None:
+        disconnected_file = ROOT.TFile.Open(disconnected_modules,"READ")
+        disconnected_tree = disconnected_file.Get("hgcaltriggergeomtester/TreeModuleErrors")
 
-        
+        for entry,event in enumerate(disconnected_tree):
+            moduledict = {}
+            if ( event.subdet==3 or event.subdet==4 ):
+                moduledict['isSilicon'] = True
+            else:
+                moduledict['isSilicon'] = False
+            moduledict['u'] = event.waferu
+            moduledict['v'] = event.waferv
+            moduledict['layer'] = event.layer
+            moduledict['lpgbts'] = [] #empty, i.e. not connected
+            modulelist.append(NoIndent(moduledict))
+
     json_main['Stage2'] = stage2list
     json_main['Stage1'] = stage1list
     json_main['lpgbt'] = lpgbtlist
@@ -596,7 +612,10 @@ def main():
 
     if ( config['function']['produce_JsonMappingFile'] ):
         subconfig = config['produce_JsonMappingFile']
-        produce_JsonMappingFile(subconfig['MappingFile'],subconfig['allocation'],minigroup_type=subconfig['minigroup_type'])
+        disconnected_modules = None
+        if 'disconnected_modules' in subconfig.keys():
+            disconnected_modules = subconfig['disconnected_modules']
+        produce_JsonMappingFile(subconfig['MappingFile'],subconfig['allocation'],minigroup_type=subconfig['minigroup_type'],disconnected_modules=disconnected_modules)
 
     
 main()
