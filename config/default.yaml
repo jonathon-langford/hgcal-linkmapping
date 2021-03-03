@@ -88,3 +88,4 @@ produce_JsonMappingFile:
   MappingFile: data/FeMappingV7.txt
   allocation: data/bundles_example-pickle.npy
   minigroup_type: 'minimal'
+  # disconnected_modules: data/test_triggergeom.root #optional root file listing disconnected modules
