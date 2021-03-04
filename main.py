@@ -192,8 +192,6 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
 
             #list lpgbts in minigroup:
             for lpgbt in minigroups_swap[minigroup]:
-                #fileout.write(str(lpgbt) + " ")
-                
                 stage1dict["lpgbts"].append(lpgbt)
 
                 lpgbtdict = {}
