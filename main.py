@@ -249,6 +249,7 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
 
     #4) Optionally add "disconnected" modules, i.e. modules that may exist in the latest geometry, but not in the input mapping file used to produce the json output
     #Assumes as input a ROOT tree, produced from the CMSSW geometry tester (HGCalTriggerGeomTesterV9Imp3)
+    heOffset = 28
     if disconnected_modules != None:
         disconnected_file = ROOT.TFile.Open(disconnected_modules,"READ")
         disconnected_tree = disconnected_file.Get("hgcaltriggergeomtester/TreeModuleErrors")
@@ -257,11 +258,16 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
             moduledict = {}
             if ( event.subdet==3 or event.subdet==4 ):
                 moduledict['isSilicon'] = True
+                if event.subdet==3:
+                    moduledict['layer'] = event.layer
+                else:
+                    moduledict['layer'] = event.layer + heOffset
             else:
                 moduledict['isSilicon'] = False
+                moduledict['layer'] = event.layer + heOffset
+                
             moduledict['u'] = event.waferu
             moduledict['v'] = event.waferv
-            moduledict['layer'] = event.layer
             moduledict['lpgbts'] = [] #empty, i.e. not connected
             modulelist.append(NoIndent(moduledict))
 
