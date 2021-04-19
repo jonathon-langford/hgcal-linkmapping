@@ -113,7 +113,7 @@ def getROverZPhi(x, y, z, sector = 0):
     roverz_phi = [r/z,phi]
     return roverz_phi
 
-def etaphiMapping(layer, etaphi):
+def etaphiMapping(layer, etaphi, mappingFile):
 
     if (etaphi[1] > 24 and etaphi[1] <= 72):
         sector = 0
@@ -132,18 +132,29 @@ def etaphiMapping(layer, etaphi):
         pp = etaphi[1]-120
   
     pp = (pp-1)//4# //Phi index 1-12
-  
-    if ( etaphi[0] <= 3 ):
-        ep = 0
-    elif ( etaphi[0] <= 9 ):
-        ep = 1
-    elif ( etaphi[0] <= 13 ):
-        ep = 2
-    elif ( etaphi[0] <= 17 ):
-        ep = 3
-    else:
-        ep = 4
 
+    if "FeMappingV7" in mappingFile:
+        if ( etaphi[0] <= 3 ):
+            ep = 0
+        elif ( etaphi[0] <= 9 ):
+            ep = 1
+        elif ( etaphi[0] <= 13 ):
+            ep = 2
+        elif ( etaphi[0] <= 17 ):
+            ep = 3
+        else:
+            ep = 4
+    elif "FeMappingTpgV7" in mappingFile:
+        split = 12
+        if layer > 40:
+            split = 8
+        if ( etaphi[0] <= split ):
+            ep = 0
+        else:
+            ep = 1
+    else:
+        print( "Expected config file version to be either V7 or TpgV7" )
+        
     return [ep,pp],sector
 
 def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata,truncation_values, TCratio, roverzBinning, nLinks):
@@ -411,7 +422,7 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
                 else: #Scintillator  
                     eta = cellu
                     phi = cellv
-                    etaphi,sector = etaphiMapping(layer,[eta,phi])
+                    etaphi,sector = etaphiMapping(layer,[eta,phi],mappingFile)
                     roverz_phi = getROverZPhi(x,y,z,sector)
                     roverz_bin = np.argmax( roverzBinning > abs(roverz_phi[0]) )
                     

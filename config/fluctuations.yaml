@@ -61,7 +61,7 @@ checkFluctuations:
   initial_state: data/bundles_job_best_neutrinogun_200617.npy
   cmsswNtuple: data/small_v11_relval_ttbar_200611.root
   outputName: alldata_neutrino_gun_2006022
-  mappingFile: data/FeMappingV7.txt
+  mappingFile: data/FeMappingTpgV7.txt
   save_ntc_hists: False
   
   tcPtConfig:
