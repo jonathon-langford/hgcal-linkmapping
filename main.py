@@ -8,11 +8,14 @@ import time
 import yaml
 import signal
 import pickle
+import json
+import re
 
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.metrics import accuracy_score
+from _ctypes import PyObj_FromPtr
 
 from process import getModuleHists, getlpGBTHists, getMiniGroupHists, getMinilpGBTGroups, getMiniModuleGroups, getBundles, getBundledlpgbtHists, getBundledlpgbtHistsRoot, calculateChiSquared, getMaximumNumberOfModulesInABundle
 from process import loadDataFile, loadModuleTowerMappingFile, getTCsPassing, getlpGBTLoadInfo, getHexModuleLoadInfo, getModuleTCHists, getMiniTowerGroups, getTowerBundles
@@ -25,7 +28,7 @@ chi2_min = 50000000000000000000000
 combbest = []
 
 class exitProgramSignal(LookupError):
-   pass
+    pass
  
 def handler(signum, frame):
     raise exitProgramSignal()    
@@ -94,6 +97,219 @@ def produce_AllocationFile(MappingFile,allocation,minigroup_type="minimal"):
                 
     fileout.close()
 
+#Code necessary for indentation:
+#from https://stackoverflow.com/questions/13249415/how-to-implement-custom-indentation-when-pretty-printing-with-the-json-module
+class NoIndent(object):
+    """ Value wrapper. """
+    def __init__(self, value):
+        self.value = value
+
+class MyEncoder(json.JSONEncoder):
+    FORMAT_SPEC = '@@{}@@'
+    regex = re.compile(FORMAT_SPEC.format(r'(\d+)'))
+
+    def __init__(self, **kwargs):
+        # Save copy of any keyword argument values needed for use here.
+        self.__sort_keys = kwargs.get('sort_keys', None)
+        super(MyEncoder, self).__init__(**kwargs)
+
+    def default(self, obj):
+        return (self.FORMAT_SPEC.format(id(obj)) if isinstance(obj, NoIndent)
+                else super(MyEncoder, self).default(obj))
+
+    def encode(self, obj):
+        format_spec = self.FORMAT_SPEC  # Local var to expedite access.
+        json_repr = super(MyEncoder, self).encode(obj)  # Default JSON.
+
+        # Replace any marked-up object ids in the JSON repr with the
+        # value returned from the json.dumps() of the corresponding
+        # wrapped Python object.
+        for match in self.regex.finditer(json_repr):
+            # see https://stackoverflow.com/a/15012814/355230
+            id = int(match.group(1))
+            no_indent = PyObj_FromPtr(id)
+            json_obj_repr = json.dumps(no_indent.value, sort_keys=self.__sort_keys)
+
+            # Replace the matched id string with json formatted representation
+            # of the corresponding Python object.
+            json_repr = json_repr.replace(
+                            '"{}"'.format(format_spec.format(id)), json_obj_repr)
+
+        return json_repr
+    
+def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disconnected_modules=None):
+
+    #Load mapping file
+    data = loadDataFile(MappingFile)    
+
+    #List of which minigroups are assigned to each bundle 
+    with open(allocation, "rb") as filep:   
+        configuration = np.hstack(pickle.load(filep))
+
+    #Get minigroups
+    minigroups,minigroups_swap = getMinilpGBTGroups(data, minigroup_type)
+    
+    #Bundle together minigroup configuration
+    bundles = getBundles(minigroups_swap,configuration)
+
+    #Open output file
+    json_main = {}
+
+    stage2list = []
+    stage1linkslist = []
+    stage1list = []
+    #intialise empty list with number of minigroups
+    lpgbtlist = [None]*len(minigroups)
+    modulelist = []
+
+    #1a) Stage 1 links to Stage 2 mapping (still preliminary)
+    #Assume for now that the Stage 2 FPGA is attached to
+    #two links from the current sector and one from the next sector
+
+    nStage2Boards = 1
+    nStage1Boards = len(bundles)
+
+    for two in range(nStage2Boards):
+        stage2dict = {}
+        stage2_stage1links_list = []
+
+        for one in range(nStage1Boards):
+            link_dict = {}
+            link_dict['SameSector'] = True
+            stage2_stage1links_list.append(NoIndent(link_dict))
+            link_dict = {}
+            link_dict['SameSector'] = True
+            stage2_stage1links_list.append(NoIndent(link_dict))
+            link_dict = {}
+            link_dict['SameSector'] = False
+            stage2_stage1links_list.append(NoIndent(link_dict))
+            
+        stage2dict['Stage1Links'] = stage2_stage1links_list
+
+        stage2list.append(stage2dict)
+
+    #1b) Stage 1 FPGAs to Stage 1 links (still preliminary)
+    #Assume for now each that each Stage 1 FPGA is connected to two links 
+    #for the current sector and one link, which will go to the previous sector
+    
+    for stage1 in range(nStage1Boards):
+
+        for i in range(2):
+            stage1linkdict = {}
+            stage1linkdict['Stage1'] = stage1
+            stage1linkdict['Stage2SameSector'] = True
+            stage1linkslist.append(NoIndent(stage1linkdict))
+        stage1linkdict = {}
+        stage1linkdict['Stage1'] = stage1
+        stage1linkdict['Stage2SameSector'] = False
+        stage1linkslist.append(NoIndent(stage1linkdict))
+    
+    #2) LpGBT mapping to Stage 1 and modules
+    for b,bundle in enumerate(bundles):
+       
+        stage1dict = {}
+        stage1dict["Stage1Links"] = {}
+        stage1dict["lpgbts"] = []
+
+        stage2_stage1links_list = [b*3,b*3+1,b*3+2]
+        stage1dict["Stage1Links"] = stage2_stage1links_list
+        
+        for minigroup in bundle:
+
+            #list lpgbts in minigroup:
+            for lpgbt in minigroups_swap[minigroup]:
+                stage1dict["lpgbts"].append(lpgbt)
+
+                lpgbtdict = {}
+                lpgbtdict['Stage1'] = b
+                lpgbtdict['Modules'] = []
+                
+                #Get modules associated to each lpgbt:
+                data_list = data[ ((data['TPGId1']==lpgbt) | (data['TPGId2']==lpgbt)) ]
+
+                for index, row in data_list.iterrows():
+                    lpgbt_moddict = {}
+                    if ( row['density']==2 ):
+                        lpgbt_moddict['isSilicon'] = False
+                    else:
+                        lpgbt_moddict['isSilicon'] = True
+                    lpgbt_moddict['u'] = row['u']
+                    lpgbt_moddict['v'] = row['v']
+                    lpgbt_moddict['layer'] = row['layer']
+
+                    lpgbtdict['Modules'].append(NoIndent(lpgbt_moddict))
+
+                lpgbtlist[lpgbt] = lpgbtdict
+                
+        stage1list.append(NoIndent(stage1dict))
+
+    #3) Get the module mapping information directly from the input mapping file
+    for index, row in data.iterrows():
+
+        module_lpgbtlist = []
+        moduledict = {}
+
+        if ( row['density']==2 ):
+            moduledict['isSilicon'] = False
+        else:
+            moduledict['isSilicon'] = True
+        moduledict['u'] = row['u']
+        moduledict['v'] = row['v']
+        moduledict['layer'] = row['layer']
+
+        lpgbt_list = []
+        for lpgbt in range(row['nTPG']):
+            lpgbt_dict = {}
+            if lpgbt == 0:
+                lpgbt_dict['id'] = row['TPGId1']
+                lpgbt_dict['nElinks'] = row['nTPGeLinks1']
+            elif lpgbt == 1:
+                lpgbt_dict['id'] = row['TPGId2']
+                lpgbt_dict['nElinks'] = row['nTPGeLinks2']
+            else:
+                print ("Number of lpGBTs is limited to two per module")
+            lpgbt_list.append(lpgbt_dict)
+            
+        moduledict['lpgbts'] = lpgbt_list
+        modulelist.append(NoIndent(moduledict))
+
+    #4) Optionally add "disconnected" modules, i.e. modules that may exist in the latest geometry, but not in the input mapping file used to produce the json output
+    #Assumes as input a ROOT tree, produced from the CMSSW geometry tester (HGCalTriggerGeomTesterV9Imp3)
+    heOffset = 28
+    if disconnected_modules != None:
+        disconnected_file = ROOT.TFile.Open(disconnected_modules,"READ")
+        disconnected_tree = disconnected_file.Get("hgcaltriggergeomtester/TreeModuleErrors")
+
+        for entry,event in enumerate(disconnected_tree):
+            moduledict = {}
+            if ( event.subdet==3 or event.subdet==4 ):
+                moduledict['isSilicon'] = True
+                if event.subdet==3:
+                    moduledict['layer'] = event.layer
+                else:
+                    moduledict['layer'] = event.layer + heOffset
+            else:
+                moduledict['isSilicon'] = False
+                moduledict['layer'] = event.layer + heOffset
+                
+            moduledict['u'] = event.waferu
+            moduledict['v'] = event.waferv
+            moduledict['lpgbts'] = [] #empty, i.e. not connected
+            modulelist.append(NoIndent(moduledict))
+
+    json_main['Stage2'] = stage2list
+    json_main['Stage1Links'] = stage1linkslist
+    json_main['Stage1'] = stage1list
+    json_main['lpgbt'] = lpgbtlist
+    json_main['Module'] = modulelist
+    
+    #Write to file
+    with open("hgcal_trigger_link_mapping_v1.json", 'w') as fp:
+        #data = json.dumps(json_main, indent=2, ensure_ascii=False)
+        data = json.dumps(json_main, ensure_ascii=False, cls=MyEncoder, indent=4)
+        #print (data)
+        fp.write(data)
+    
 def produce_nTCsPerModuleHists(MappingFile,allocation,CMSSW_ModuleHists,minigroup_type="minimal",correctionConfig=None):
 
     #Load mapping file
@@ -422,6 +638,13 @@ def main():
     if ( config['function']['produce_nTCsPerModuleHists'] ):
         subconfig = config['produce_nTCsPerModuleHists']
         produce_nTCsPerModuleHists(subconfig['MappingFile'],subconfig['allocation'],CMSSW_ModuleHists = subconfig['CMSSW_ModuleHists'],minigroup_type=subconfig['minigroup_type'],correctionConfig=None)
+
+    if ( config['function']['produce_JsonMappingFile'] ):
+        subconfig = config['produce_JsonMappingFile']
+        disconnected_modules = None
+        if 'disconnected_modules' in subconfig.keys():
+            disconnected_modules = subconfig['disconnected_modules']
+        produce_JsonMappingFile(subconfig['MappingFile'],subconfig['allocation'],minigroup_type=subconfig['minigroup_type'],disconnected_modules=disconnected_modules)
 
     
 main()

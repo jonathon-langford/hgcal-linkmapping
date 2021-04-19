@@ -5,6 +5,7 @@ function:
   plot_ModuleLoads: False
   produce_AllocationFile: False               
   produce_nTCsPerModuleHists: False
+  produce_JsonMappingFile: False
   
 print_level: 0
 output_dir: .
@@ -19,7 +20,7 @@ study_mapping:
   algorithm: random_hill_climb
 
   #initial state configuation:
-  #'random', 'example', 'data/bundles_job_best_neutrinogun_200617.npy'
+  #'random', 'example', 'data/bundles_example-pickle.npy'
   initial_state: random
 
   random_seed: ~
@@ -74,11 +75,17 @@ plot_ModuleLoads:
 
 produce_AllocationFile:
   MappingFile: data/FeMappingV7.txt
-  allocation: bundles_job_7058.npy
+  allocation: data/bundles_example-pickle.npy
   minigroup_type: 'minimal'
 
 produce_nTCsPerModuleHists:
   MappingFile: data/FeMappingV7.txt
-  allocation: bundles_job_7058.npy
+  allocation: data/bundles_example-pickle.npy
   minigroup_type: 'minimal'
   CMSSW_ModuleHists: data/nTCs_v11_relval_ttbar_20200814.root
+
+produce_JsonMappingFile:
+  MappingFile: data/FeMappingV7.txt
+  allocation: data/bundles_example-pickle.npy
+  minigroup_type: 'minimal'
+  # disconnected_modules: data/test_triggergeom.root #optional root file listing disconnected modules

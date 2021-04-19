@@ -1,5 +1,5 @@
-input_file: bundles_job_best_neutrinogun_200617.npy
-output_dir: plots/20200619
+input_file: data/bundles_example-pickle.npy
+output_dir: plots
 
 npy_configuration:
   mappingFile: data/FeMappingV7.txt
