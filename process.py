@@ -81,18 +81,18 @@ def getModuleHists1D(HistFile):
         if "Inclusive" in hist or "ROverZ" not in hist:
             continue
         
-        ikj = hist.split("_")
+        ijk = hist.split("_")
         
         if "silicon" in hist:
             if "Phi60" in hist:
-                phi60[0,ijk[-3],ijk[-2],ijk[-1]] = infiles[-1].Get(hist)
+                phi60[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
             else:
-                inclusive[0,ijk[-3],ijk[-2],ijk[-1]] = infiles[-1].Get(hist)
+                inclusive[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
         elif "scintillator" in hist:
             if "Phi60" in hist:
-                phi60[1,ijk[-3],ijk[-2],ijk[-1]] = infiles[-1].Get(hist)
+                phi60[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
             else:
-                inclusive[1,ijk[-3],ijk[-2],ijk[-1]] = infiles[-1].Get(hist)
+                inclusive[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
 
     inclusive_hists.append(infiles[-1].Get("ROverZ_Inclusive" ))
     inclusive_hists.append(infiles[-1].Get("ROverZ_Inclusive_Phi60" ))
@@ -114,12 +114,12 @@ def getModuleTCHists(HistFile):
         if "nTCs" not in hist:
             continue
 
-        ikj = hist.split("_")
+        ijk = hist.split("_")
 
         if "silicon" in hist:
-            module_hists[0,ijk[-3],ijk[-2],ijk[-1]] = infiles[-1].Get(hist)
+            module_hists[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
         elif "scintillator" in hist:
-            module_hists[1,ijk[-3],ijk[-2],ijk[-1]] = infiles[-1].Get(hist)
+            module_hists[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
 
     return module_hists
 
@@ -206,16 +206,16 @@ def getModuleHists(HistFile, split = "fixed", phidivisionX_fixvalue_min = 55, ph
         if "Inclusive" in hist or "ROverZ" not in hist:
             continue
 
-        ikj = hist.split("_") #To get u (ieta), v (iphi), and layer
+        ijk = hist.split("_") #To get u (ieta), v (iphi), and layer
         PhiVsROverZ = infiles[-1].Get(hist)
         nBinsPhi = PhiVsROverZ.GetNbinsY()        
 
         if "silicon" in hist:                            
-            projectionX_PhiDivisionX = PhiVsROverZ.ProjectionX( "ROverZ_silicon_"+str(ijk[-3])+"_"+str(ijk[-2])+"_"+str(ijk[-1]) +"_PhiDivisionX" )
-            projectionX_PhiDivisionY = PhiVsROverZ.ProjectionX( "ROverZ_silicon_"+str(ijk[-3])+"_"+str(ijk[-2])+"_"+str(ijk[-1]) +"_PhiDivisionY" )
+            projectionX_PhiDivisionX = PhiVsROverZ.ProjectionX( "ROverZ_silicon_"+ijk[-3]+"_"+ijk[-2]+"_"+ijk[-1]+"_PhiDivisionX" )
+            projectionX_PhiDivisionY = PhiVsROverZ.ProjectionX( "ROverZ_silicon_"+ijk[-3]+"_"+ijk[-2]+"_"+ijk[-1]+"_PhiDivisionY" )
         elif "scintillator" in hist:
-            projectionX_PhiDivisionX = PhiVsROverZ.ProjectionX( "ROverZ_scintillator_"+str(ijk[-3])+"_"+str(ijk[-2])+"_"+str(ijk[-1]) +"_PhiDivisionX" )
-            projectionX_PhiDivisionY = PhiVsROverZ.ProjectionX( "ROverZ_scintillator_"+str(ijk[-3])+"_"+str(ijk[-2])+"_"+str(ijk[-1]) +"_PhiDivisionY" )
+            projectionX_PhiDivisionX = PhiVsROverZ.ProjectionX( "ROverZ_scintillator_"+ijk[-3]+"_"+ijk[-2]+"_"+ijk[-1]+"_PhiDivisionX" )
+            projectionX_PhiDivisionY = PhiVsROverZ.ProjectionX( "ROverZ_scintillator_"+ijk[-3]+"_"+ijk[-2]+"_"+ijk[-1]+"_PhiDivisionY" )
 
         projectionX_PhiDivisionX.Reset()
         projectionX_PhiDivisionY.Reset()
@@ -227,13 +227,13 @@ def getModuleHists(HistFile, split = "fixed", phidivisionX_fixvalue_min = 55, ph
             projectionX_PhiDivisionX.SetBinError(x,error.value)
             projectionX_PhiDivisionY.SetBinContent(x,PhiVsROverZ.IntegralAndError(x,x,1,int(split_indices_DivisionY[x-1]-1),error))
             projectionX_PhiDivisionY.SetBinError(x,error.value)
-
+        
         if "silicon" in hist:
-            phiDivisionX[0,ijk[-3],ijk[-2],ijk[-1]] = projectionX_PhiDivisionX
-            phiDivisionY[0,ijk[-3],ijk[-2],ijk[-1]] = projectionX_PhiDivisionY
-        elif "scintillator" in hist:                    
-            phiDivisionX[1,ijk[-3],ijk[-2],ijk[-1]] = projectionX_PhiDivisionX
-            phiDivisionY[1,ijk[-3],ijk[-2],ijk[-1]] = projectionX_PhiDivisionY
+            phiDivisionX[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = projectionX_PhiDivisionX
+            phiDivisionY[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = projectionX_PhiDivisionY
+        elif "scintillator" in hist:
+            phiDivisionX[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = projectionX_PhiDivisionX
+            phiDivisionY[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = projectionX_PhiDivisionY
 
     module_hists.append(phiDivisionX)
     module_hists.append(phiDivisionY)
@@ -420,7 +420,7 @@ def getlpGBTHists(data, module_hists):
     lpgbt_hists = []
 
     for p,phiselection in enumerate(module_hists):#phi > 60 and phi < 60
-
+        
         temp = {}
 
         for lpgbt in range(0,1600) :

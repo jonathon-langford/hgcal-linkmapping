@@ -12,7 +12,7 @@ output_dir: .
 
 study_mapping:
   MappingFile: data/FeMappingTpgV7.txt
-  CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_neutrino_gun_20200611.root
+  CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_ttbar_20210419.root
   TowerMappingFile: data/splitModuleSumsOverTowers.txt
 
   #Algorithms for minimisation:
