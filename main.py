@@ -157,37 +157,66 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
     json_main = {}
 
     stage2list = []
+    stage1linkslist = []
     stage1list = []
     #intialise empty list with number of minigroups
     lpgbtlist = [None]*len(minigroups)
     modulelist = []
 
-    #1) Stage 1 to Stage 2 mapping (still preliminary)
-    #Assume for now each of the 18 Stage 2 FPGAs is attached to each of the Stage 1 boards
+    #1a) Stage 1 links to Stage 2 mapping (still preliminary)
+    #Assume for now that the Stage 2 FPGA is attached to
+    #two links from the current sector and one from the next sector
 
-    nStage2Boards = 18
+    nStage2Boards = 1
     nStage1Boards = len(bundles)
 
     for two in range(nStage2Boards):
         stage2dict = {}
-        stage2_stage1_list = []
+        stage2_stage1links_list = []
 
         for one in range(nStage1Boards):
-            stage2_stage1_list.append(one)
-        stage2dict['Stage1'] = stage2_stage1_list
-        
-        stage2list.append(NoIndent(stage2dict))
+            link_dict = {}
+            link_dict['SameSector'] = True
+            stage2_stage1links_list.append(NoIndent(link_dict))
+            link_dict = {}
+            link_dict['SameSector'] = True
+            stage2_stage1links_list.append(NoIndent(link_dict))
+            link_dict = {}
+            link_dict['SameSector'] = False
+            stage2_stage1links_list.append(NoIndent(link_dict))
+            
+        stage2dict['Stage1Links'] = stage2_stage1links_list
 
+        stage2list.append(stage2dict)
+
+    #1b) Stage 1 FPGAs to Stage 1 links (still preliminary)
+    #Assume for now each that each Stage 1 FPGA is connected to two links 
+    #for the current sector and one link, which will go to the previous sector
+
+    
+    for stage1 in range(nStage1Boards):
+
+        for i in range(2):
+            stage1linkdict = {}
+            stage1linkdict['Stage1'] = stage1
+            stage1linkdict['Stage2SameSector'] = True
+            stage1linkslist.append(NoIndent(stage1linkdict))
+        stage1linkdict = {}
+        stage1linkdict['Stage1'] = stage1
+        stage1linkdict['Stage2SameSector'] = False
+        stage1linkslist.append(NoIndent(stage1linkdict))
+
+    
     #2) LpGBT mapping to Stage 1 and modules
     for b,bundle in enumerate(bundles):
        
         stage1dict = {}
-        stage1dict["Stage2"] = []
+        stage1dict["Stage1Links"] = {}
         stage1dict["lpgbts"] = []
 
-        for two in range(nStage2Boards):
-            stage1dict["Stage2"].append(two)
-            
+        stage2_stage1links_list = [b*3,b*3+1,b*3+2]
+        stage1dict["Stage1Links"] = stage2_stage1links_list
+        
         for minigroup in bundle:
 
             #list lpgbts in minigroup:
@@ -272,6 +301,7 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
             modulelist.append(NoIndent(moduledict))
 
     json_main['Stage2'] = stage2list
+    json_main['Stage1Links'] = stage1linkslist
     json_main['Stage1'] = stage1list
     json_main['lpgbt'] = lpgbtlist
     json_main['Module'] = modulelist
