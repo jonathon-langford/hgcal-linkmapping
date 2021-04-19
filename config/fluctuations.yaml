@@ -76,7 +76,7 @@ checkFluctuations:
     #'per_roverz_bin', 'fixed'
     type: per_roverz_bin
     
-    splitfile: data/ROverZHistograms_v11_relval_ttbar_20200716.root
+    splitfile: data/ROverZHistograms_v11_relval_ttbar_20210419.root
     phidivisionX_fixvalue_min: 55 #degrees
     phidivisionY_fixvalue_max: 55 #degrees
   
