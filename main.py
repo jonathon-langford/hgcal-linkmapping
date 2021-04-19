@@ -153,7 +153,6 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
     bundles = getBundles(minigroups_swap,configuration)
 
     #Open output file
-
     json_main = {}
 
     stage2list = []
@@ -192,7 +191,6 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
     #1b) Stage 1 FPGAs to Stage 1 links (still preliminary)
     #Assume for now each that each Stage 1 FPGA is connected to two links 
     #for the current sector and one link, which will go to the previous sector
-
     
     for stage1 in range(nStage1Boards):
 
@@ -205,7 +203,6 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
         stage1linkdict['Stage1'] = stage1
         stage1linkdict['Stage2SameSector'] = False
         stage1linkslist.append(NoIndent(stage1linkdict))
-
     
     #2) LpGBT mapping to Stage 1 and modules
     for b,bundle in enumerate(bundles):
@@ -305,8 +302,6 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
     json_main['Stage1'] = stage1list
     json_main['lpgbt'] = lpgbtlist
     json_main['Module'] = modulelist
-
-
     
     #Write to file
     with open("hgcal_trigger_link_mapping_v1.json", 'w') as fp:
