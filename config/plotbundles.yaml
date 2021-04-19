@@ -2,7 +2,7 @@ input_file: data/bundles_example-pickle.npy
 output_dir: plots
 
 npy_configuration:
-  mappingFile: data/FeMappingV7.txt
+  mappingFile: data/FeMappingTpgV7.txt
   towerMappingFile: data/splitModuleSumsOverTowers.txt
   CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_neutrino_gun_20200611.root
   phisplit:

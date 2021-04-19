@@ -126,6 +126,7 @@ unsigned etaphiMapping(unsigned layer, std::pair<int,int> &etaphi, std::string c
   pp = (pp-1)/4; //Phi index 1-12
 
   if ( configFileVersion == "V7" ){
+    std::cout << "v7" << std::endl;
     if ( etaphi.first <= 3 ){
       ep = 0;
     }
@@ -143,7 +144,7 @@ unsigned etaphiMapping(unsigned layer, std::pair<int,int> &etaphi, std::string c
     }
   }
   else if ( configFileVersion == "TpgV7" ){
-
+    std::cout << "tpg" << std::endl;
     int split = 12;
     if ( layer > 40 ){
       split = 8;
@@ -162,7 +163,7 @@ unsigned etaphiMapping(unsigned layer, std::pair<int,int> &etaphi, std::string c
   etaphi.first=ep;
   etaphi.second=pp;
   
-  
+  std::cout << etaphi.first << std::endl;  
   return sector;
 }
 
@@ -248,11 +249,15 @@ int main(int argc, char **argv){
   std::string flat_file_silicon = config["flat_file_silicon"];
   std::string flat_file_scintillator = config["flat_file_scintillator"];
   std::string file_ROverZHistograms = config["file_ROverZHistograms"];
-  std::string file_nTCsPerEvent = config["file_nTCsPerEvent"];
   std::string average_tcs_sil = config["average_tcs_sil"];
   std::string average_tcs_scin = config["average_tcs_scin"];
   std::string configFileVersion = config["configFileVersion"];
   bool createFlatFile = config["createFlatFile"];
+
+  int max_ieta = 2; //Definition of a scintillator module is different between V7 and TpgV7 mapping files 
+  if ( configFileVersion == "V7" ){
+    max_ieta = 5;
+  }
   
   TFile * file = new TFile(TString(input_file),"READ");
   TTree * tree = (TTree*)file->Get("HGCalTriggerNtuple");
@@ -336,7 +341,7 @@ int main(int argc, char **argv){
       }
     }
 	  
-    for ( int i = 0; i < 5; i++){
+    for ( int i = 0; i < max_ieta; i++){
       for ( int j = 0; j < 12; j++){
 	for ( int k = 37; k < 53; k++){
 
@@ -445,7 +450,7 @@ int main(int argc, char **argv){
       if (createFlatFile){
 	for (int z = 0;z<words_plus_scin.size();z++ ){
 	  
-	  for ( int i = 0; i < 5; i++){
+	  for ( int i = 0; i < max_ieta; i++){
 	    for ( int j = 0; j < 12; j++){
 	      for ( int k = 37; k < 53; k++){
 		f_flattree_scintillator << words_plus_scin.at(z)->GetBinContent(words_plus_scin.at(z)->FindBin(i,j,k)) << " ";
@@ -455,7 +460,7 @@ int main(int argc, char **argv){
 	  
 	  f_flattree_scintillator <<  std::endl;
 	  
-	  for ( int i = 0; i < 5; i++){
+	  for ( int i = 0; i < max_ieta; i++){
 	    for ( int j = 0; j < 12; j++){
 	      for ( int k = 37; k < 53; k++){
 		f_flattree_scintillator << words_minus_scin.at(z)->GetBinContent(words_minus_scin.at(z)->FindBin(i,j,k)) << " ";
@@ -563,7 +568,8 @@ int main(int argc, char **argv){
     fout.close();
 
     fout.open (average_tcs_scin);
-    for ( int i = 0; i < 5; i++){
+
+    for ( int i = 0; i < max_ieta; i++){
       for ( int j = 0; j < 12; j++){
 	for ( int k = 37; k < 53; k++){
 

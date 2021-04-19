@@ -11,7 +11,7 @@ print_level: 0
 output_dir: .
 
 study_mapping:
-  MappingFile: data/FeMappingV7.txt
+  MappingFile: data/FeMappingTpgV7.txt
   CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_neutrino_gun_20200611.root
   TowerMappingFile: data/splitModuleSumsOverTowers.txt
 
@@ -55,12 +55,12 @@ corrections:
 check_for_missing_modules:
   inCMSSW: True
   inMappingFile: True
-  MappingFile: data/FeMappingV7.txt
+  MappingFile: data/FeMappingTpgV7.txt
   CMSSW_Silicon: "data/average_tcs_sil_v11_relval_ttbar_20200611.csv"
   CMSSW_Scintillator: "data/average_tcs_scin_v11_relval_ttbar_20200611.csv"
 
 plot_lpGBTLoads:
-  MappingFile: data/FeMappingV7.txt
+  MappingFile: data/FeMappingTpgV7.txt
   # V11
   CMSSW_Silicon: "data/average_tcs_sil_v11_relval_ttbar_20200611.csv"
   CMSSW_Scintillator: "data/average_tcs_scin_v11_relval_ttbar_20200611.csv"
@@ -69,23 +69,23 @@ plot_lpGBTLoads:
   # CMSSW_Scintillator: "data/average_tcs_scin_v10_qg_20200331.csv"
 
 plot_ModuleLoads:
-  MappingFile: data/FeMappingV7.txt
+  MappingFile: data/FeMappingTpgV7.txt
   CMSSW_Silicon: "data/average_tcs_sil_v11_relval_ttbar_20200611.csv"
   CMSSW_Scintillator: "data/average_tcs_scin_v11_relval_ttbar_20200611.csv"
 
 produce_AllocationFile:
-  MappingFile: data/FeMappingV7.txt
+  MappingFile: data/FeMappingTpgV7.txt
   allocation: data/bundles_example-pickle.npy
   minigroup_type: 'minimal'
 
 produce_nTCsPerModuleHists:
-  MappingFile: data/FeMappingV7.txt
+  MappingFile: data/FeMappingTpgV7.txt
   allocation: data/bundles_example-pickle.npy
   minigroup_type: 'minimal'
   CMSSW_ModuleHists: data/nTCs_v11_relval_ttbar_20200814.root
 
 produce_JsonMappingFile:
-  MappingFile: data/FeMappingV7.txt
+  MappingFile: data/FeMappingTpgV7.txt
   allocation: data/bundles_example-pickle.npy
   minigroup_type: 'minimal'
   # disconnected_modules: data/test_triggergeom.root #optional root file listing disconnected modules

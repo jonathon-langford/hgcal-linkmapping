@@ -3,9 +3,8 @@
     "flat_file_silicon": "words_all_v11_silicon_ttbar.txt",
     "flat_file_scintillator": "words_all_v11_scintillator_ttbar.txt",
     "file_ROverZHistograms": "ROverZHistograms_v11_relval_ttbar_20200807.root",
-    "file_nTCsPerEvent": "NTCs_v11_relval_neutrino_gun_20200722.root",
     "average_tcs_sil": "average_tcs_sil_v11_relval_ttbar_20200625.csv",
     "average_tcs_scin": "average_tcs_scin_v11_relval_ttbar_20200625.csv",
-    "configFileVersion": "TpgV7"
+    "configFileVersion": "TpgV7",
     "createFlatFile": false
 }

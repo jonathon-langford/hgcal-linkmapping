@@ -278,6 +278,10 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
     #Load mapping file
     data = loadDataFile(mappingFile) 
 
+    max_ieta = 2 #Definition of a scintillator module is different between V7 and TpgV7 mapping files 
+    if "FeMappingV7" in mappingFile:
+        max_ieta = 5
+    
     #Load geometry corrections
     if correctionConfig['nTCCorrectionFile'] != None:
         modulesToCorrect = loadSiliconNTCCorrectionFile( correctionConfig['nTCCorrectionFile'] )
@@ -328,7 +332,7 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
                         continue
                     nTCs_per_module[0,i,j,k] = ROOT.TH1D( "nTCs_silicon_" + str(i) + "_" + str(j) + "_" + str(k), "", 49, -0.5, 48.5 )
 
-        for i in range (5):
+        for i in range (max_ieta):
             for j in range (12):
                 for k in range (37,53):
                     nTCs_per_module[1,i,j,k] = ROOT.TH1D( "nTCs_scintillator_" + str(i) + "_" + str(j) + "_" + str(k), "", 49, -0.5, 48.5 )
@@ -354,7 +358,7 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
                             ROverZ_per_module_phidivisionX_tcPt[key1][0,i,j,k] = [] #np.empty(0)
                             ROverZ_per_module_phidivisionY_tcPt[key1][0,i,j,k] = [] #np.empty(0)
 
-            for i in range (5):
+            for i in range (max_ieta):
                 for j in range (12):
                     for k in range (37,53):
                         ROverZ_per_module_phidivisionX[key1][1,i,j,k] = np.empty(0)
