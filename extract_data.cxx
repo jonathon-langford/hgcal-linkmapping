@@ -126,7 +126,6 @@ unsigned etaphiMapping(unsigned layer, std::pair<int,int> &etaphi, std::string c
   pp = (pp-1)/4; //Phi index 1-12
 
   if ( configFileVersion == "V7" ){
-    std::cout << "v7" << std::endl;
     if ( etaphi.first <= 3 ){
       ep = 0;
     }
@@ -144,7 +143,6 @@ unsigned etaphiMapping(unsigned layer, std::pair<int,int> &etaphi, std::string c
     }
   }
   else if ( configFileVersion == "TpgV7" ){
-    std::cout << "tpg" << std::endl;
     int split = 12;
     if ( layer > 40 ){
       split = 8;
@@ -163,7 +161,6 @@ unsigned etaphiMapping(unsigned layer, std::pair<int,int> &etaphi, std::string c
   etaphi.first=ep;
   etaphi.second=pp;
   
-  std::cout << etaphi.first << std::endl;  
   return sector;
 }
 
