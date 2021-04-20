@@ -20,7 +20,7 @@ study_mapping:
   algorithm: random_hill_climb
 
   #initial state configuation:
-  #'random', 'example', 'data/bundles_example-pickle.npy'
+  #'random', 'example', 'data/bundles_example-pickle-tpgv7.npy'
   initial_state: random
 
   random_seed: ~
@@ -75,17 +75,17 @@ plot_ModuleLoads:
 
 produce_AllocationFile:
   MappingFile: data/FeMappingTpgV7.txt
-  allocation: data/bundles_example-pickle.npy
+  allocation: data/bundles_example-pickle-tpgv7.npy
   minigroup_type: 'minimal'
 
 produce_nTCsPerModuleHists:
   MappingFile: data/FeMappingTpgV7.txt
-  allocation: data/bundles_example-pickle.npy
+  allocation: data/bundles_example-pickle-tpgv7.npy
   minigroup_type: 'minimal'
   CMSSW_ModuleHists: data/nTCs_v11_relval_ttbar_20200814.root
 
 produce_JsonMappingFile:
   MappingFile: data/FeMappingTpgV7.txt
-  allocation: data/bundles_example-pickle.npy
+  allocation: data/bundles_example-pickle-tpgv7.npy
   minigroup_type: 'minimal'
   # disconnected_modules: data/test_triggergeom.root #optional root file listing disconnected modules

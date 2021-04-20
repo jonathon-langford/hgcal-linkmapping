@@ -1,4 +1,4 @@
-input_file: data/bundles_example-pickle.npy
+input_file: data/bundles_example-pickle-tpgv7.npy
 output_dir: plots
 
 npy_configuration:
