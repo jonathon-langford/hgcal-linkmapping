@@ -282,9 +282,9 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
 
         for entry,event in enumerate(disconnected_tree):
             moduledict = {}
-            if ( event.subdet==3 or event.subdet==4 ):
+            if ( event.subdet==1 or event.subdet==2 ):
                 moduledict['isSilicon'] = True
-                if event.subdet==3:
+                if event.subdet==1:
                     moduledict['layer'] = event.layer
                 else:
                     moduledict['layer'] = event.layer + heOffset
