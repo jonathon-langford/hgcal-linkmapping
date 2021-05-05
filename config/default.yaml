@@ -76,6 +76,7 @@ plot_ModuleLoads:
 produce_AllocationFile:
   MappingFile: data/FeMappingTpgV7.txt
   allocation: data/bundles_example-pickle-tpgv7.npy
+  file_name: 'allocation.txt'
   minigroup_type: 'minimal'
 
 produce_nTCsPerModuleHists:
