@@ -264,12 +264,13 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
     save_sum_tcPt = False
     if ( tcPtConfig != None ):
         save_sum_tcPt = tcPtConfig['save_sum_tcPt']
-        options_to_study = tcPtConfig['options_to_study']
-        if ( truncationConfig != None ):
-            for option in options_to_study:
-                truncation_options.append(truncationConfig['option'+str(option)]['predetermined_values'])
-                ABratios.append(truncationConfig['option'+str(option)]['maxTCsA']/truncationConfig['option'+str(option)]['maxTCsB'])
-                nLinks.append(truncationConfig['option'+str(option)]['nLinks'])
+        if save_sum_tcPt:
+            options_to_study = tcPtConfig['options_to_study']
+            if ( truncationConfig != None ):
+                for option in options_to_study:
+                    truncation_options.append(truncationConfig['option'+str(option)]['predetermined_values'])
+                    ABratios.append(truncationConfig['option'+str(option)]['maxTCsA']/truncationConfig['option'+str(option)]['maxTCsB'])
+                    nLinks.append(truncationConfig['option'+str(option)]['nLinks'])
 
     #Load the CMSSW ntuple to get per event and per trigger cell information
     rootfile = ROOT.TFile.Open( cmsswNtuple , "READ" )
