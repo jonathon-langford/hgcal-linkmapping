@@ -538,11 +538,17 @@ def plotTruncation(eventData, outdir = ".", includePhi60 = True):
     pl.ylim((0,1100000))
     pl.savefig( outdir + "/phidivisionYIntegrated.png" )
 
-def plot_Truncation_tc_Pt(eventData, options_to_study, outdir = ".",  ):
+def plot_Truncation_tc_Pt(eventData, options_to_study, truncationConfig = None, outdir = ".",  ):
 
     #Load the per-event flucation data produced using 'checkFluctuations'
     with open(eventData, "rb") as filep:   
         data = pickle.load(filep)
+
+    #Load the number of links for the truncation options
+    nLinks = []
+    if ( truncationConfig != None ):
+        for option in options_to_study:
+            nLinks.append(truncationConfig['option'+str(option)]['nLinks'])
 
     nbinsROverZ = len(data[0][0][0]) #42
     axis =  np.histogram( np.empty(0), bins = nbinsROverZ, range = (0.076,0.58) )[1]
@@ -581,9 +587,11 @@ def plot_Truncation_tc_Pt(eventData, options_to_study, outdir = ".",  ):
         truncatedsum_B = np.sum( truncationB, axis=0 )
 
         #Divide to get the fraction, taking into account division by zero
-        if (options_to_study[t-1] < 4 ):
+        #We assume that the order of options in the input-data is the same as
+        #the order of options provided in the config
+        if (nlinks[t-1] == 3 ):
             ratioA = np.divide(   truncatedsum_A, totalsumInclusive , out=np.ones_like(truncatedsum_A), where=totalsumInclusive!=0 )
-        else:
+        elif (nlinks[t-1] == 4 ):
             ratioA = np.divide(   truncatedsum_A, totalsumA , out=np.ones_like(truncatedsum_A), where=totalsumA!=0 )
         ratioB = np.divide(   truncatedsum_B, totalsumB , out=np.ones_like(truncatedsum_B), where=totalsumB!=0 )
         

@@ -564,7 +564,7 @@ def main():
         
     if (config['function']['plot_Truncation_tc_Pt']):
         subconfig = config['plot_Truncation_tc_Pt']
-        plot_Truncation_tc_Pt(eventData = subconfig['eventData'], options_to_study = subconfig['options_to_study'], outdir = config['output_dir'] )
+        plot_Truncation_tc_Pt(eventData = subconfig['eventData'], options_to_study = subconfig['options_to_study'], truncationConfig = config['truncationConfig'], outdir = config['output_dir'] )
 
     
 main()
