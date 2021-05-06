@@ -539,7 +539,8 @@ def plotTruncation(eventData, outdir = ".", includePhi60 = True):
     pl.savefig( outdir + "/phidivisionYIntegrated.png" )
 
 def plot_Truncation_tc_Pt(eventData, options_to_study, truncationConfig = None, outdir = ".",  ):
-
+    os.system("mkdir -p " + outdir)
+    
     #Load the per-event flucation data produced using 'checkFluctuations'
     with open(eventData, "rb") as filep:   
         data = pickle.load(filep)
@@ -589,9 +590,9 @@ def plot_Truncation_tc_Pt(eventData, options_to_study, truncationConfig = None, 
         #Divide to get the fraction, taking into account division by zero
         #We assume that the order of options in the input-data is the same as
         #the order of options provided in the config
-        if (nlinks[t-1] == 3 ):
+        if (nLinks[t-1] == 3 ):
             ratioA = np.divide(   truncatedsum_A, totalsumInclusive , out=np.ones_like(truncatedsum_A), where=totalsumInclusive!=0 )
-        elif (nlinks[t-1] == 4 ):
+        elif (nLinks[t-1] == 4 ):
             ratioA = np.divide(   truncatedsum_A, totalsumA , out=np.ones_like(truncatedsum_A), where=totalsumA!=0 )
         ratioB = np.divide(   truncatedsum_B, totalsumB , out=np.ones_like(truncatedsum_B), where=totalsumB!=0 )
         
