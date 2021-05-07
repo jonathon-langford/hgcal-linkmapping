@@ -230,6 +230,16 @@ def getReverseTruncationValues( dataA, dataB, maxTCsA, maxTCsB ):
     
     nbins = len(dataA[0][0]) #42
 
+    #Option to read out means
+    print_means = True
+    mean_A = np.mean(np.sum(dataA, axis=(2)))
+    mean_B = np.mean(np.sum(dataB, axis=(2)))
+    mean_A2 = np.mean(dataA, axis=(0,1))
+    mean_B2 = np.mean(dataB, axis=(0,1))
+    if print_means:
+        print ("mean region A = "  + str(mean_A))
+        print ("mean region B = "  + str(mean_B))
+    
     #reorganise data to get bin b values across all events and bundles
     reorganisedDataA = []
     reorganisedDataB = []
@@ -264,14 +274,16 @@ def getTruncationValuesRoverZ(data_A, data_B, maxtcs_A, maxtcs_B):
     maximum_A = np.amax(data_A,axis=(1,0))
     maximum_B = np.amax(data_B,axis=(1,0))
 
-    ###
-    ##quantities to read out for paul
+    #Option to read out means
+    print_means = False
     mean_A = np.mean(np.sum(data_A, axis=(2)))
     mean_B = np.mean(np.sum(data_B, axis=(2)))
     mean_A2 = np.mean(data_A, axis=(0,1))
     mean_B2 = np.mean(data_B, axis=(0,1))
-    ####
-    
+    if print_means:
+        print ("mean region A = "  + str(mean_A))
+        print ("mean region B = "  + str(mean_B))
+
     pc_A = np.percentile(data_A, 99, axis=(0,1))
     pc_B = np.percentile(data_B, 99,axis=(0,1))
 
