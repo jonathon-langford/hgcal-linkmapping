@@ -13,15 +13,24 @@ import time
 import yaml
 import sys, os
 
-def plotMeanMax(eventData, outdir = ".", includePhi60 = True):
+def plotMeanMax(eventData, outdir = ".", includePhi60 = True, binningConfig = None):
     #Load pickled per-event bundle histograms
     with open(eventData, "rb") as filep:   
         bundled_lpgbthists_allevents = pickle.load(filep)
     os.system("mkdir -p " + outdir)
+
+    if ( binningConfig != None ):        
+        nROverZBins = binningConfig["nROverZBins"]
+        rOverZMin = binningConfig["rOverZMin"]
+        rOverZMax = binningConfig["rOverZMax"]
+    else:
+        #Set defaults
+        nROverZBins = 42
+        rOverZMin = 0.076
+        rOverZMax = 0.58
     
-    nbins = 42
     #To get binning for r/z histograms
-    inclusive_hists = np.histogram( np.empty(0), bins = nbins, range = (0.076,0.58) )
+    inclusive_hists = np.histogram( np.empty(0), bins = nROverZBins, range = (rOverZMin,rOverZMax) )
 
     #Names for inclusive and phi < 60 indices
     inclusive = 0
@@ -33,8 +42,8 @@ def plotMeanMax(eventData, outdir = ".", includePhi60 = True):
 
     for bundle in range(24):
 
-        list_over_events_inclusive = np.empty(((len(bundled_lpgbthists_allevents)),nbins))
-        list_over_events_phi60 = np.empty(((len(bundled_lpgbthists_allevents)),nbins))
+        list_over_events_inclusive = np.empty(((len(bundled_lpgbthists_allevents)),nROverZBins))
+        list_over_events_phi60 = np.empty(((len(bundled_lpgbthists_allevents)),nROverZBins))
         
         for e,event in enumerate(bundled_lpgbthists_allevents):
             list_over_events_inclusive[e] = np.array(event[inclusive][bundle])/6
@@ -124,7 +133,7 @@ def plot_NTCs_Vs_ROverZ(inputdata,axis,savename,truncation_curves=None,scaling=N
 
     #Plot the 2D histogram
     pl.clf()
-    pl.hist2d( roverz , data_swap.flatten() , bins = (len(axis)-1,50),range=[[0.076,0.58], [0, 50]],norm=LogNorm())
+    pl.hist2d( roverz , data_swap.flatten() , bins = (len(axis)-1,50),range=[[axis[0],axis[-1]], [0, 50]],norm=LogNorm())
     pl.colorbar().set_label("Number of Events")
     #Plot the various 1D truncation curves
     colours = ['red','orange','cyan','green','teal','darkviolet']
@@ -228,7 +237,7 @@ def getOptimalScalingValue(scalar,data):
 def getReverseTruncationValues( dataA, dataB, maxTCsA, maxTCsB ):
     #Obtain the truncation values by demanding that the efficiency be constant as a function of r/z
     
-    nbins = len(dataA[0][0]) #42
+    nbins = len(dataA[0][0]) #42 by default
 
     #Option to read out means
     print_means = True
@@ -346,7 +355,7 @@ def loadFluctuationData(eventData):
     dataY = 1
 
     nbundles = len(bundled_lpgbthists_allevents[0][0]) #24
-    nbins = len(bundled_lpgbthists_allevents[0][0][0]) #42
+    nbins = len(bundled_lpgbthists_allevents[0][0][0]) #42 by default
     
     dataX_bundled_lpgbthists_allevents = np.empty((len(bundled_lpgbthists_allevents),nbundles,nbins))
     dataY_bundled_lpgbthists_allevents = np.empty((len(bundled_lpgbthists_allevents),nbundles,nbins))
@@ -357,17 +366,25 @@ def loadFluctuationData(eventData):
 
     return dataX_bundled_lpgbthists_allevents, dataY_bundled_lpgbthists_allevents
     
-def studyTruncationOptions(eventData, options_to_study, truncation_values_method, truncationConfig, outdir = "."):
-    
+def studyTruncationOptions(eventData, options_to_study, truncation_values_method, truncationConfig, binningConfig = None, outdir = "."):
+
+    if ( binningConfig != None ):        
+        rOverZMin = binningConfig["rOverZMin"]
+        rOverZMax = binningConfig["rOverZMax"]
+    else:
+        #Set defaults
+        rOverZMin = 0.076
+        rOverZMax = 0.58
+
     #Load pickled per-event bundle histograms
     phidivisionX_bundled_lpgbthists_allevents,phidivisionY_bundled_lpgbthists_allevents = loadFluctuationData(eventData)
 
     os.system("mkdir -p " + outdir)
 
-    nbinsROverZ = len(phidivisionX_bundled_lpgbthists_allevents[0][0]) #42
+    nbinsROverZ = len(phidivisionX_bundled_lpgbthists_allevents[0][0]) #42 by default
     
     #To get binning for r/z histograms
-    inclusive_hists = np.histogram( np.empty(0), bins = nbinsROverZ, range = (0.076,0.58) )
+    inclusive_hists = np.histogram( np.empty(0), bins = nbinsROverZ, range = (rOverZMin, rOverZMax) )
 
     inclusive_bundled_lpgbthists_allevents = phidivisionX_bundled_lpgbthists_allevents + phidivisionY_bundled_lpgbthists_allevents
 
@@ -433,14 +450,24 @@ def studyTruncationOptions(eventData, options_to_study, truncation_values_method
         plot_frac_Vs_ROverZ( regionA, regionB, values, option['maxTCsA']/option['maxTCsB'], inclusive_hists[1], "Sum No. TCs Option " + str(study_num), outdir + "/frac_option_"+str(study_num))
 
 
-def plotTruncation(eventData, outdir = ".", includePhi60 = True):
+def plotTruncation(eventData, outdir = ".", includePhi60 = True, binningConfig = None):
     os.system("mkdir -p " + outdir)
+
+    if ( binningConfig != None ):        
+        nROverZBins = binningConfig["nROverZBins"]
+        rOverZMin = binningConfig["rOverZMin"]
+        rOverZMax = binningConfig["rOverZMax"]
+    else:
+        #Set defaults
+        nROverZBins = 42
+        rOverZMin = 0.076
+        rOverZMax = 0.58
     
     #Load pickled per-event bundle histograms
     phidivisionX_bundled_lpgbthists_allevents,phidivisionY_bundled_lpgbthists_allevents = loadFluctuationData(eventData)
 
     #To get binning for r/z histograms
-    inclusive_hists = np.histogram( np.empty(0), bins = 42, range = (0.076,0.58) )
+    inclusive_hists = np.histogram( np.empty(0), bins = nROverZBins, range = (rOverZMin,rOverZMax) )
     roverzBinning = inclusive_hists[1]
     
     #Form the intersection of the inclusive and phi60 arrays,
@@ -478,7 +505,7 @@ def plotTruncation(eventData, outdir = ".", includePhi60 = True):
 
         bundle_hists_inclusive = bundle_hists_phidivisionX + bundle_hists_phidivisionY
         bundle_hists_maximum = np.maximum(bundle_hists_inclusive,bundle_hists_phidivisionY*2)
-        #24 arrays, with length of 42        
+        #24 arrays, with length of nROverZBins (42 by default)
 
         sum99 = []
         sum95 = []
@@ -497,7 +524,7 @@ def plotTruncation(eventData, outdir = ".", includePhi60 = True):
             sum90.append ( np.where( np.less( overall_max90p, bundle ), overall_max90p, bundle )  )
         
 
-        total_per_event.append( np.sum(bundle_hists, axis=1 ))        #array with length of 24 (sum over the 42 bins)
+        total_per_event.append( np.sum(bundle_hists, axis=1 ))        #array with length of 24 (sum over the bins - 42 by default)
         total_per_event99.append( np.sum(sum99, axis=1 ))
         total_per_event95.append( np.sum(sum95, axis=1 ))
         total_per_event90.append( np.sum(sum90, axis=1 ))
@@ -550,8 +577,16 @@ def plotTruncation(eventData, outdir = ".", includePhi60 = True):
     pl.ylim((0,1100000))
     pl.savefig( outdir + "/phidivisionYIntegrated.png" )
 
-def plot_Truncation_tc_Pt(eventData, options_to_study, truncationConfig = None, outdir = ".",  ):
+def plot_Truncation_tc_Pt(eventData, options_to_study, truncationConfig = None, binningConfig = None, outdir = "."):
     os.system("mkdir -p " + outdir)
+    
+    if ( binningConfig != None ):        
+        rOverZMin = binningConfig["rOverZMin"]
+        rOverZMax = binningConfig["rOverZMax"]
+    else:
+        #Set defaults
+        rOverZMin = 0.076
+        rOverZMax = 0.58
     
     #Load the per-event flucation data produced using 'checkFluctuations'
     with open(eventData, "rb") as filep:   
@@ -563,8 +598,8 @@ def plot_Truncation_tc_Pt(eventData, options_to_study, truncationConfig = None, 
         for option in options_to_study:
             nLinks.append(truncationConfig['option'+str(option)]['nLinks'])
 
-    nbinsROverZ = len(data[0][0][0]) #42
-    axis =  np.histogram( np.empty(0), bins = nbinsROverZ, range = (0.076,0.58) )[1]
+    nbinsROverZ = len(data[0][0][0]) #42 by default
+    axis =  np.histogram( np.empty(0), bins = nbinsROverZ, range = (rOverZMin,rOverZMax) )[1]
 
     truncation_options_regionA = []
     truncation_options_regionB = []

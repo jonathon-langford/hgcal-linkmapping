@@ -13,6 +13,11 @@ corrections:
   ldmToHdmCorrectionType: 'FixedOcc'
   nTCCorrectionFile: 'data/different_nTCs_linkMapping.txt'
 
+binningConfig:
+  nROverZBins: 42
+  rOverZMin: 0.076
+  rOverZMax: 0.58
+
 truncationConfig:
   option1:
     maxTCsA: 400

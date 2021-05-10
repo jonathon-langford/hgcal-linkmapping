@@ -245,8 +245,14 @@ def getHistsPerLayer(module_hists):
     f = ROOT.TFile.Open("HistsPerLayer.root","RECREATE")
     histsPerLayer = []
     
+    #Get binning from module hists
+    example_hist = next(iter(module_hists[0].values()))
+    nROverZBins = example_hist.GetNbinsX()
+    rOverZMin = example_hist.GetXaxis().GetBinLowEdge(1)
+    rOverZMax = example_hist.GetXaxis().GetBinLowEdge(nROverZBins + 1)
+
     for layer in range(1,53):
-        layer_hist = ROOT.TH1D( ("layer_ROverZ" + "_" + str(layer)),"",42,0.076,0.58);
+        layer_hist = ROOT.TH1D( ("layer_ROverZ" + "_" + str(layer)),"",nROverZBins,rOverZMin,rOverZMax)
         histsPerLayer.append(layer_hist)
 
     print (len(histsPerLayer))
@@ -387,13 +393,16 @@ def getMiniGroupHists(lpgbt_hists, minigroups_swap, root=False, return_error_squ
     minigroup_hists_phiGreater60 = {}
     minigroup_hists_phiLess60 = {}
 
-    minigroup_hists_errors_phiGreater60 = {}
-    minigroup_hists_errors_phiLess60 = {}
+    #Get binning from lpgbt hists
+    example_hist = lpgbt_hists[0][0]
+    nROverZBins = example_hist.GetNbinsX()
+    rOverZMin = example_hist.GetXaxis().GetBinLowEdge(1)
+    rOverZMax = example_hist.GetXaxis().GetBinLowEdge(nROverZBins + 1)
 
     for minigroup, lpgbts in minigroups_swap.items():
         
-        phiGreater60 = ROOT.TH1D( "minigroup_ROverZ_silicon_" + str(minigroup) + "_0","",42,0.076,0.58) 
-        phiLess60    = ROOT.TH1D( "minigroup_ROverZ_silicon_" + str(minigroup) + "_1","",42,0.076,0.58) 
+        phiGreater60 = ROOT.TH1D( "minigroup_ROverZ_silicon_" + str(minigroup) + "_0","",nROverZBins,rOverZMin,rOverZMax)
+        phiLess60    = ROOT.TH1D( "minigroup_ROverZ_silicon_" + str(minigroup) + "_1","",nROverZBins,rOverZMin,rOverZMax)
 
         for lpgbt in lpgbts:
 
@@ -423,10 +432,16 @@ def getlpGBTHists(data, module_hists):
 
         temp = {}
 
+        #Get binning from module hists
+        example_hist = next(iter(phiselection.values()))
+        nROverZBins = example_hist.GetNbinsX()
+        rOverZMin = example_hist.GetXaxis().GetBinLowEdge(1)
+        rOverZMax = example_hist.GetXaxis().GetBinLowEdge(nROverZBins + 1)
+        
         for lpgbt in range(0,1600) :
             lpgbt_found = False
 
-            lpgbt_hist = ROOT.TH1D( ("lpgbt_ROverZ_silicon_" + str(lpgbt) + "_" + str(p)),"",42,0.076,0.58);
+            lpgbt_hist = ROOT.TH1D( ("lpgbt_ROverZ_silicon_" + str(lpgbt) + "_" + str(p)),"",nROverZBins,rOverZMin,rOverZMax)
             
             for tpg_index in ['TPGId1','TPGId2']:#lpgbt may be in the first or second position in the file
 
@@ -628,6 +643,12 @@ def getBundledlpgbtHistsRoot(minigroup_hists,bundles):
     bundled_lpgbthists = []
     bundled_lpgbthists_list = []
 
+    #Get binning from minigroup hists
+    example_hist = minigroup_hists[0][0]
+    nROverZBins = example_hist.GetNbinsX()
+    rOverZMin = example_hist.GetXaxis().GetBinLowEdge(1)
+    rOverZMax = example_hist.GetXaxis().GetBinLowEdge(nROverZBins + 1)
+
     for p,phiselection in enumerate(minigroup_hists):
 
         temp = {}
@@ -635,10 +656,10 @@ def getBundledlpgbtHistsRoot(minigroup_hists,bundles):
         for i in range(len(bundles)):#loop over bundles
 
             #Create one lpgbt histogram per bundle
-            lpgbt_hist = ROOT.TH1D( ("lpgbt_ROverZ_bundled_" + str(i) + "_" + str(p)),"",42,0.076,0.58);
+            lpgbt_hist = ROOT.TH1D( ("lpgbt_ROverZ_bundled_" + str(i) + "_" + str(p)),"",nROverZBins,rOverZMin,rOverZMax)
             
             for minigroup in bundles[i]:#loop over each lpgbt in the bundle
-                lpgbt_hist.Add( phiselection[minigroup]  )
+                lpgbt_hist.Add( phiselection[minigroup] )
 
             temp[i] = lpgbt_hist
 
@@ -649,12 +670,6 @@ def getBundledlpgbtHistsRoot(minigroup_hists,bundles):
 
 def getBundledlpgbtHists(minigroup_hists,bundles):
 
-    use_error_squares = False
-    #Check if the minigroup_hists were produced
-    #with additional squared error information    
-    if ( minigroup_hists[0][0].ndim == 2 ):
-        use_error_squares = True
-        
     bundled_lpgbthists_list = []
 
     for p,phiselection in enumerate(minigroup_hists):
@@ -664,10 +679,9 @@ def getBundledlpgbtHists(minigroup_hists,bundles):
         for i in range(len(bundles)):#loop over bundles
 
             #Create one lpgbt histogram per bundle
-            if not use_error_squares:
-                lpgbt_hist_list = np.zeros(42)
-            else:
-                lpgbt_hist_list = np.zeros((42,2))
+            #Use minigroup_hists[0][0] shape as  the minigroup_hists
+            #might have been produced with additional squared error information    
+            lpgbt_hist_list = np.zeros(minigroup_hists[0][0].shape)
 
             for minigroup in bundles[i]:#loop over each lpgbt in the bundle
                 lpgbt_hist_list+= phiselection[minigroup] 

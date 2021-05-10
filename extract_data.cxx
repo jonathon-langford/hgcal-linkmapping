@@ -250,6 +250,9 @@ int main(int argc, char **argv){
   std::string average_tcs_scin = config["average_tcs_scin"];
   std::string configFileVersion = config["configFileVersion"];
   bool createFlatFile = config["createFlatFile"];
+  int nROverZBins = config["nROverZBins"];
+  double rOverZMin = config["rOverZMin"];
+  double rOverZMax = config["rOverZMax"];
 
   int max_ieta = 2; //Definition of a scintillator module is different between V7 and TpgV7 mapping files 
   if ( configFileVersion == "V7" ){
@@ -323,7 +326,7 @@ int main(int argc, char **argv){
 
     //R/Z Histograms
 
-    TH2D * ROverZ_Inclusive = new TH2D("ROverZ_Inclusive","",42,0.076,0.58,nPhiBins,phiMin,phiMax);
+    TH2D * ROverZ_Inclusive = new TH2D("ROverZ_Inclusive","",nROverZBins,rOverZMin,rOverZMax,nPhiBins,phiMin,phiMax);
     std::map<std::tuple<int,int,int,int>,TH2D*> ROverZ_per_module;
 
     //Create one for each module (silicon at first)
@@ -332,7 +335,7 @@ int main(int argc, char **argv){
 	for ( int k = 1; k < 53; k++){//layer
 
 	  if ( k < 28 && k%2 == 0 ) continue;
-	  ROverZ_per_module[std::make_tuple(0,i,j,k)] = new TH2D( ("ROverZ_silicon_" + std::to_string(i) + "_" +  std::to_string(j) +"_"+ std::to_string(k)).c_str(),"",42,0.076,0.58,nPhiBins,phiMin,phiMax);
+	  ROverZ_per_module[std::make_tuple(0,i,j,k)] = new TH2D( ("ROverZ_silicon_" + std::to_string(i) + "_" +  std::to_string(j) +"_"+ std::to_string(k)).c_str(),"",nROverZBins,rOverZMin,rOverZMax,nPhiBins,phiMin,phiMax);
 
 	}
       }
@@ -342,7 +345,7 @@ int main(int argc, char **argv){
       for ( int j = 0; j < 12; j++){
 	for ( int k = 37; k < 53; k++){
 
-	  ROverZ_per_module[std::make_tuple(1,i,j,k)] = new TH2D( ("ROverZ_scintillator_" + std::to_string(i) + "_" +  std::to_string(j) +"_"+ std::to_string(k)).c_str(),"",42,0.076,0.58,nPhiBins,phiMin,phiMax);
+	  ROverZ_per_module[std::make_tuple(1,i,j,k)] = new TH2D( ("ROverZ_scintillator_" + std::to_string(i) + "_" +  std::to_string(j) +"_"+ std::to_string(k)).c_str(),"",nROverZBins,rOverZMin,rOverZMax,nPhiBins,phiMin,phiMax);
 
 	}
       }
