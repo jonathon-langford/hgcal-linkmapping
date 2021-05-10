@@ -113,7 +113,7 @@ def getROverZPhi(x, y, z, sector = 0):
     roverz_phi = [r/z,phi]
     return roverz_phi
 
-def etaphiMapping(layer, etaphi):
+def etaphiMapping(layer, etaphi, mappingFile):
 
     if (etaphi[1] > 24 and etaphi[1] <= 72):
         sector = 0
@@ -132,18 +132,29 @@ def etaphiMapping(layer, etaphi):
         pp = etaphi[1]-120
   
     pp = (pp-1)//4# //Phi index 1-12
-  
-    if ( etaphi[0] <= 3 ):
-        ep = 0
-    elif ( etaphi[0] <= 9 ):
-        ep = 1
-    elif ( etaphi[0] <= 13 ):
-        ep = 2
-    elif ( etaphi[0] <= 17 ):
-        ep = 3
-    else:
-        ep = 4
 
+    if "FeMappingV7" in mappingFile:
+        if ( etaphi[0] <= 3 ):
+            ep = 0
+        elif ( etaphi[0] <= 9 ):
+            ep = 1
+        elif ( etaphi[0] <= 13 ):
+            ep = 2
+        elif ( etaphi[0] <= 17 ):
+            ep = 3
+        else:
+            ep = 4
+    elif "FeMappingTpgV7" in mappingFile:
+        split = 12
+        if layer > 40:
+            split = 8
+        if ( etaphi[0] <= split ):
+            ep = 0
+        else:
+            ep = 1
+    else:
+        print( "Expected config file version to be either V7 or TpgV7" )
+        
     return [ep,pp],sector
 
 def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata,truncation_values, TCratio, roverzBinning, nLinks):
@@ -253,12 +264,13 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
     save_sum_tcPt = False
     if ( tcPtConfig != None ):
         save_sum_tcPt = tcPtConfig['save_sum_tcPt']
-        options_to_study = tcPtConfig['options_to_study']
-        if ( truncationConfig != None ):
-            for option in options_to_study:
-                truncation_options.append(truncationConfig['option'+str(option)]['predetermined_values'])
-                ABratios.append(truncationConfig['option'+str(option)]['maxTCsA']/truncationConfig['option'+str(option)]['maxTCsB'])
-                nLinks.append(truncationConfig['option'+str(option)]['nLinks'])
+        if save_sum_tcPt:
+            options_to_study = tcPtConfig['options_to_study']
+            if ( truncationConfig != None ):
+                for option in options_to_study:
+                    truncation_options.append(truncationConfig['option'+str(option)]['predetermined_values'])
+                    ABratios.append(truncationConfig['option'+str(option)]['maxTCsA']/truncationConfig['option'+str(option)]['maxTCsB'])
+                    nLinks.append(truncationConfig['option'+str(option)]['nLinks'])
 
     #Load the CMSSW ntuple to get per event and per trigger cell information
     rootfile = ROOT.TFile.Open( cmsswNtuple , "READ" )
@@ -267,6 +279,10 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
     #Load mapping file
     data = loadDataFile(mappingFile) 
 
+    max_ieta = 2 #Definition of a scintillator module is different between V7 and TpgV7 mapping files 
+    if "FeMappingV7" in mappingFile:
+        max_ieta = 5
+    
     #Load geometry corrections
     if correctionConfig['nTCCorrectionFile'] != None:
         modulesToCorrect = loadSiliconNTCCorrectionFile( correctionConfig['nTCCorrectionFile'] )
@@ -317,7 +333,7 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
                         continue
                     nTCs_per_module[0,i,j,k] = ROOT.TH1D( "nTCs_silicon_" + str(i) + "_" + str(j) + "_" + str(k), "", 49, -0.5, 48.5 )
 
-        for i in range (5):
+        for i in range (max_ieta):
             for j in range (12):
                 for k in range (37,53):
                     nTCs_per_module[1,i,j,k] = ROOT.TH1D( "nTCs_scintillator_" + str(i) + "_" + str(j) + "_" + str(k), "", 49, -0.5, 48.5 )
@@ -343,7 +359,7 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
                             ROverZ_per_module_phidivisionX_tcPt[key1][0,i,j,k] = [] #np.empty(0)
                             ROverZ_per_module_phidivisionY_tcPt[key1][0,i,j,k] = [] #np.empty(0)
 
-            for i in range (5):
+            for i in range (max_ieta):
                 for j in range (12):
                     for k in range (37,53):
                         ROverZ_per_module_phidivisionX[key1][1,i,j,k] = np.empty(0)
@@ -411,7 +427,7 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
                 else: #Scintillator  
                     eta = cellu
                     phi = cellv
-                    etaphi,sector = etaphiMapping(layer,[eta,phi])
+                    etaphi,sector = etaphiMapping(layer,[eta,phi],mappingFile)
                     roverz_phi = getROverZPhi(x,y,z,sector)
                     roverz_bin = np.argmax( roverzBinning > abs(roverz_phi[0]) )
                     
@@ -548,7 +564,7 @@ def main():
         
     if (config['function']['plot_Truncation_tc_Pt']):
         subconfig = config['plot_Truncation_tc_Pt']
-        plot_Truncation_tc_Pt(eventData = subconfig['eventData'], options_to_study = subconfig['options_to_study'], outdir = config['output_dir'] )
+        plot_Truncation_tc_Pt(eventData = subconfig['eventData'], options_to_study = subconfig['options_to_study'], truncationConfig = config['truncationConfig'], outdir = config['output_dir'] )
 
     
 main()

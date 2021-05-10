@@ -59,7 +59,7 @@ def plot_ModuleLoads(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
     plot2D(lpgbt_loads_tcs,lpgbt_layers,"tcs_vs_layer.png",xtitle='Number of TCs on a single lpGBT')
     plot2D(lpgbt_loads_words,lpgbt_layers,"words_vs_layer.png",xtitle='Number of words on a single lpGBT')
     
-def produce_AllocationFile(MappingFile,allocation,minigroup_type="minimal"):
+def produce_AllocationFile(MappingFile,allocation,file_name="allocation.txt",minigroup_type="minimal"):
 
     #Load mapping file
     data = loadDataFile(MappingFile) 
@@ -75,7 +75,7 @@ def produce_AllocationFile(MappingFile,allocation,minigroup_type="minimal"):
     bundles = getBundles(minigroups_swap,configuration)
 
     #Open output file
-    fileout = open('allocation_20200729_1.txt', 'w')
+    fileout = open(file_name, 'w')
     fileout.write( '(lpGBT_number) (number_modules) (sil=0scin=1) (layer) (u/eta) (v/phi) (number_elinks)\n' )
     for b,bundle in enumerate(bundles):
         fileout.write(str(b) + "\n")
@@ -282,9 +282,9 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
 
         for entry,event in enumerate(disconnected_tree):
             moduledict = {}
-            if ( event.subdet==3 or event.subdet==4 ):
+            if ( event.subdet==1 or event.subdet==2 ):
                 moduledict['isSilicon'] = True
-                if event.subdet==3:
+                if event.subdet==1:
                     moduledict['layer'] = event.layer
                 else:
                     moduledict['layer'] = event.layer + heOffset
@@ -633,7 +633,7 @@ def main():
 
     if ( config['function']['produce_AllocationFile'] ):
         subconfig = config['produce_AllocationFile']
-        produce_AllocationFile(subconfig['MappingFile'],subconfig['allocation'],minigroup_type=subconfig['minigroup_type'])
+        produce_AllocationFile(subconfig['MappingFile'],subconfig['allocation'],file_name=subconfig['file_name'],minigroup_type=subconfig['minigroup_type'])
 
     if ( config['function']['produce_nTCsPerModuleHists'] ):
         subconfig = config['produce_nTCsPerModuleHists']

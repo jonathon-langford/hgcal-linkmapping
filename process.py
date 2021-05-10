@@ -74,34 +74,25 @@ def getModuleHists1D(HistFile):
 
     inclusive = {}
     phi60 = {}
-    
-    for i in range (15): #u
-        for j in range (15): #v
-            for k in range (53):#layer
-                if ( k < 28 and k%2 == 0 ):
-                    continue
-                inclusive[0,i,j,k] = infiles[-1].Get("ROverZ_silicon_"+str(i)+"_"+str(j)+"_"+str(k) )
 
-    for i in range (15): #u
-        for j in range (15): #v
-            for k in range (53):#layer
-                if ( k < 28 and k%2 == 0 ):
-                    continue
-                phi60[0,i,j,k] = infiles[-1].Get("ROverZ_Phi60_silicon_"+str(i)+"_"+str(j)+"_"+str(k) )
+    list_of_hists = [hist.GetName() for hist in infiles[-1].GetListOfKeys()]
 
-
-    for i in range (5): #u
-        for j in range (12): #v
-            for k in range (37,53):#layer
-                inclusive[1,i,j,k] = infiles[-1].Get("ROverZ_scintillator_"+str(i)+"_"+str(j)+"_"+str(k) )
-
-    for i in range (5): #u
-        for j in range (12): #v
-            for k in range (37,53):#layer
-                phi60[1,i,j,k] = infiles[-1].Get("ROverZ_Phi60_scintillator_"+str(i)+"_"+str(j)+"_"+str(k) )
-
-
-    
+    for hist in list_of_hists:
+        if "Inclusive" in hist or "ROverZ" not in hist:
+            continue
+        
+        ijk = hist.split("_")
+        
+        if "silicon" in hist:
+            if "Phi60" in hist:
+                phi60[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+            else:
+                inclusive[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+        elif "scintillator" in hist:
+            if "Phi60" in hist:
+                phi60[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+            else:
+                inclusive[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
 
     inclusive_hists.append(infiles[-1].Get("ROverZ_Inclusive" ))
     inclusive_hists.append(infiles[-1].Get("ROverZ_Inclusive_Phi60" ))
@@ -117,19 +108,18 @@ def getModuleTCHists(HistFile):
     module_hists = {}
     
     infiles.append(ROOT.TFile.Open(HistFile,"READ"))
+    list_of_hists = [hist.GetName() for hist in infiles[-1].GetListOfKeys()]
+    
+    for hist in list_of_hists:
+        if "nTCs" not in hist:
+            continue
 
-    for i in range (15): #u
-        for j in range (15): #v
-            for k in range (53):#layer
-                if ( k < 28 and k%2 == 0 ):
-                    continue
-                module_hists[0,i,j,k] = infiles[-1].Get("nTCs_silicon_"+str(i)+"_"+str(j)+"_"+str(k) )
+        ijk = hist.split("_")
 
-
-    for i in range (5): #u
-        for j in range (12): #v
-            for k in range (37,53):#layer
-                module_hists[1,i,j,k] = infiles[-1].Get("nTCs_scintillator_"+str(i)+"_"+str(j)+"_"+str(k) )
+        if "silicon" in hist:
+            module_hists[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+        elif "scintillator" in hist:
+            module_hists[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
 
     return module_hists
 
@@ -209,55 +199,41 @@ def getModuleHists(HistFile, split = "fixed", phidivisionX_fixvalue_min = 55, ph
     
     phiDivisionX = {}
     phiDivisionY = {}
-    
-    for i in range (15): #u
-        for j in range (15): #v
-            for k in range (53):#layer
-                if ( k < 28 and k%2 == 0 ):
-                    continue
-                
-                PhiVsROverZ = infiles[-1].Get("ROverZ_silicon_"+str(i)+"_"+str(j)+"_"+str(k) )
-                nBinsPhi = PhiVsROverZ.GetNbinsY()
 
-                projectionX_PhiDivisionX = PhiVsROverZ.ProjectionX( "ROverZ_silicon_"+str(i)+"_"+str(j)+"_"+str(k) +"_PhiDivisionX" )
-                projectionX_PhiDivisionY = PhiVsROverZ.ProjectionX( "ROverZ_silicon_"+str(i)+"_"+str(j)+"_"+str(k) +"_PhiDivisionY" )
-                projectionX_PhiDivisionX.Reset()
-                projectionX_PhiDivisionY.Reset()
+    list_of_hists = [hist.GetName() for hist in infiles[-1].GetListOfKeys()]
 
-                #Get an independent projection for each R/Z bin
-                for x in range(1,PhiVsROverZ.GetNbinsX()+1):
-                    error = ctypes.c_double(-1)
-                    projectionX_PhiDivisionX.SetBinContent(x,PhiVsROverZ.IntegralAndError(x,x,int(split_indices_DivisionX[x-1]),int(nBinsPhi),error))
-                    projectionX_PhiDivisionX.SetBinError(x,error.value)
-                    projectionX_PhiDivisionY.SetBinContent(x,PhiVsROverZ.IntegralAndError(x,x,1,int(split_indices_DivisionY[x-1]-1),error))
-                    projectionX_PhiDivisionY.SetBinError(x,error.value)
+    for hist in list_of_hists:
+        if "Inclusive" in hist or "ROverZ" not in hist:
+            continue
 
-                phiDivisionX[0,i,j,k] = projectionX_PhiDivisionX
-                phiDivisionY[0,i,j,k] = projectionX_PhiDivisionY
+        ijk = hist.split("_") #To get u (ieta), v (iphi), and layer
+        PhiVsROverZ = infiles[-1].Get(hist)
+        nBinsPhi = PhiVsROverZ.GetNbinsY()        
 
-    for i in range (5): #u
-        for j in range (12): #v
-            for k in range (37,53):#layer
-                PhiVsROverZ = infiles[-1].Get("ROverZ_scintillator_"+str(i)+"_"+str(j)+"_"+str(k) )
-                #phi<60 is half the total number of bins in the y-dimension, i.e. for 12 bins (default) would be 6
-                nBinsPhi = PhiVsROverZ.GetNbinsY()
+        if "silicon" in hist:                            
+            projectionX_PhiDivisionX = PhiVsROverZ.ProjectionX( "ROverZ_silicon_"+ijk[-3]+"_"+ijk[-2]+"_"+ijk[-1]+"_PhiDivisionX" )
+            projectionX_PhiDivisionY = PhiVsROverZ.ProjectionX( "ROverZ_silicon_"+ijk[-3]+"_"+ijk[-2]+"_"+ijk[-1]+"_PhiDivisionY" )
+        elif "scintillator" in hist:
+            projectionX_PhiDivisionX = PhiVsROverZ.ProjectionX( "ROverZ_scintillator_"+ijk[-3]+"_"+ijk[-2]+"_"+ijk[-1]+"_PhiDivisionX" )
+            projectionX_PhiDivisionY = PhiVsROverZ.ProjectionX( "ROverZ_scintillator_"+ijk[-3]+"_"+ijk[-2]+"_"+ijk[-1]+"_PhiDivisionY" )
 
-                projectionX_PhiDivisionX = PhiVsROverZ.ProjectionX( "ROverZ_scintillator_"+str(i)+"_"+str(j)+"_"+str(k) +"_PhiDivisionX" )
-                projectionX_PhiDivisionY = PhiVsROverZ.ProjectionX( "ROverZ_scintillator_"+str(i)+"_"+str(j)+"_"+str(k) +"_PhiDivisionY" )
-                projectionX_PhiDivisionX.Reset()
-                projectionX_PhiDivisionY.Reset()
+        projectionX_PhiDivisionX.Reset()
+        projectionX_PhiDivisionY.Reset()
 
-                #Get an independent projection for each R/Z bin
-                for x in range(1,PhiVsROverZ.GetNbinsX()+1):
-                    error = ctypes.c_double(-1)
-                    projectionX_PhiDivisionX.SetBinContent(x,PhiVsROverZ.IntegralAndError(x,x,int(split_indices_DivisionX[x-1]),int(nBinsPhi),error))
-                    projectionX_PhiDivisionX.SetBinError(x,error.value)
-                    projectionX_PhiDivisionY.SetBinContent(x,PhiVsROverZ.IntegralAndError(x,x,1,int(split_indices_DivisionY[x-1]-1),error))
-                    projectionX_PhiDivisionY.SetBinError(x,error.value)
-                    
-                phiDivisionX[1,i,j,k] = projectionX_PhiDivisionX
-                phiDivisionY[1,i,j,k] = projectionX_PhiDivisionY
-
+        #Get an independent projection for each R/Z bin
+        for x in range(1,PhiVsROverZ.GetNbinsX()+1):
+            error = ctypes.c_double(-1)
+            projectionX_PhiDivisionX.SetBinContent(x,PhiVsROverZ.IntegralAndError(x,x,int(split_indices_DivisionX[x-1]),int(nBinsPhi),error))
+            projectionX_PhiDivisionX.SetBinError(x,error.value)
+            projectionX_PhiDivisionY.SetBinContent(x,PhiVsROverZ.IntegralAndError(x,x,1,int(split_indices_DivisionY[x-1]-1),error))
+            projectionX_PhiDivisionY.SetBinError(x,error.value)
+        
+        if "silicon" in hist:
+            phiDivisionX[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = projectionX_PhiDivisionX
+            phiDivisionY[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = projectionX_PhiDivisionY
+        elif "scintillator" in hist:
+            phiDivisionX[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = projectionX_PhiDivisionX
+            phiDivisionY[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = projectionX_PhiDivisionY
 
     module_hists.append(phiDivisionX)
     module_hists.append(phiDivisionY)

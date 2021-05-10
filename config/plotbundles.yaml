@@ -1,10 +1,10 @@
-input_file: data/bundles_example-pickle.npy
+input_file: data/bundles_example-pickle-tpgv7.npy
 output_dir: plots
 
 npy_configuration:
-  mappingFile: data/FeMappingV7.txt
+  mappingFile: data/FeMappingTpgV7.txt
   towerMappingFile: data/splitModuleSumsOverTowers.txt
-  CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_neutrino_gun_20200611.root
+  CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_ttbar_20210419.root
   phisplit:
     #How to split in phi, either 'per_roverz_bin' (midpoint splits taken from CMSSW_ModuleHists file) or 'fixed'
     #If 'fixed' need to provide split values in degrees,

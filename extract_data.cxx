@@ -94,7 +94,7 @@ unsigned uvMapping(unsigned layer, std::pair<int,int> &uv) {
 }
 
 //Rotate and convert from cell to tile numbering
-unsigned etaphiMapping(unsigned layer, std::pair<int,int> &etaphi) {
+unsigned etaphiMapping(unsigned layer, std::pair<int,int> &etaphi, std::string configFileVersion = "TpgV7") {
   unsigned sector(0);
   
   if (etaphi.second > 24 && etaphi.second <= 72){
@@ -124,26 +124,42 @@ unsigned etaphiMapping(unsigned layer, std::pair<int,int> &etaphi) {
   }
   
   pp = (pp-1)/4; //Phi index 1-12
-  
-  if ( etaphi.first <= 3 ){
-    ep = 0;
+
+  if ( configFileVersion == "V7" ){
+    if ( etaphi.first <= 3 ){
+      ep = 0;
+    }
+    else if ( etaphi.first <= 9 ){
+      ep = 1;
+    }
+    else if ( etaphi.first <= 13 ){
+      ep = 2;
+    }
+    else if ( etaphi.first <= 17 ){
+      ep = 3;
+    }
+    else{
+      ep = 4;
+    }
   }
-  else if ( etaphi.first <= 9 ){
-    ep = 1;
-  }
-  else if ( etaphi.first <= 13 ){
-    ep = 2;
-  }
-  else if ( etaphi.first <= 17 ){
-    ep = 3;
+  else if ( configFileVersion == "TpgV7" ){
+    int split = 12;
+    if ( layer > 40 ){
+      split = 8;
+    }
+    if ( etaphi.first <= split ){
+      ep = 0;
+    }
+    else{
+      ep = 1;
+    }   
   }
   else{
-    ep = 4;
+    std::cout << "Expected config file version to be either V7 or TpgV7" << std::endl;
   }
   
   etaphi.first=ep;
   etaphi.second=pp;
-  
   
   return sector;
 }
@@ -230,10 +246,15 @@ int main(int argc, char **argv){
   std::string flat_file_silicon = config["flat_file_silicon"];
   std::string flat_file_scintillator = config["flat_file_scintillator"];
   std::string file_ROverZHistograms = config["file_ROverZHistograms"];
-  std::string file_nTCsPerEvent = config["file_nTCsPerEvent"];
   std::string average_tcs_sil = config["average_tcs_sil"];
   std::string average_tcs_scin = config["average_tcs_scin"];
+  std::string configFileVersion = config["configFileVersion"];
   bool createFlatFile = config["createFlatFile"];
+
+  int max_ieta = 2; //Definition of a scintillator module is different between V7 and TpgV7 mapping files 
+  if ( configFileVersion == "V7" ){
+    max_ieta = 5;
+  }
   
   TFile * file = new TFile(TString(input_file),"READ");
   TTree * tree = (TTree*)file->Get("HGCalTriggerNtuple");
@@ -317,7 +338,7 @@ int main(int argc, char **argv){
       }
     }
 	  
-    for ( int i = 0; i < 5; i++){
+    for ( int i = 0; i < max_ieta; i++){
       for ( int j = 0; j < 12; j++){
 	for ( int k = 37; k < 53; k++){
 
@@ -381,7 +402,7 @@ int main(int argc, char **argv){
 
 	  coordinates = std::make_pair(eta,phi);
 	  
-	  sector = etaphiMapping(tc_layer->at(j),coordinates);
+	  sector = etaphiMapping(tc_layer->at(j),coordinates,configFileVersion);
 
 	  if ( tc_zside->at(j) > 0 ){
 	    per_event_plus_scin.at(sector)->Fill(coordinates.first , coordinates.second, tc_layer->at(j) );
@@ -426,7 +447,7 @@ int main(int argc, char **argv){
       if (createFlatFile){
 	for (int z = 0;z<words_plus_scin.size();z++ ){
 	  
-	  for ( int i = 0; i < 5; i++){
+	  for ( int i = 0; i < max_ieta; i++){
 	    for ( int j = 0; j < 12; j++){
 	      for ( int k = 37; k < 53; k++){
 		f_flattree_scintillator << words_plus_scin.at(z)->GetBinContent(words_plus_scin.at(z)->FindBin(i,j,k)) << " ";
@@ -436,7 +457,7 @@ int main(int argc, char **argv){
 	  
 	  f_flattree_scintillator <<  std::endl;
 	  
-	  for ( int i = 0; i < 5; i++){
+	  for ( int i = 0; i < max_ieta; i++){
 	    for ( int j = 0; j < 12; j++){
 	      for ( int k = 37; k < 53; k++){
 		f_flattree_scintillator << words_minus_scin.at(z)->GetBinContent(words_minus_scin.at(z)->FindBin(i,j,k)) << " ";
@@ -544,7 +565,8 @@ int main(int argc, char **argv){
     fout.close();
 
     fout.open (average_tcs_scin);
-    for ( int i = 0; i < 5; i++){
+
+    for ( int i = 0; i < max_ieta; i++){
       for ( int j = 0; j < 12; j++){
 	for ( int k = 37; k < 53; k++){
 

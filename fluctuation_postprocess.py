@@ -230,6 +230,16 @@ def getReverseTruncationValues( dataA, dataB, maxTCsA, maxTCsB ):
     
     nbins = len(dataA[0][0]) #42
 
+    #Option to read out means
+    print_means = True
+    mean_A = np.mean(np.sum(dataA, axis=(2)))
+    mean_B = np.mean(np.sum(dataB, axis=(2)))
+    mean_A2 = np.mean(dataA, axis=(0,1))
+    mean_B2 = np.mean(dataB, axis=(0,1))
+    if print_means:
+        print ("mean region A = "  + str(mean_A))
+        print ("mean region B = "  + str(mean_B))
+    
     #reorganise data to get bin b values across all events and bundles
     reorganisedDataA = []
     reorganisedDataB = []
@@ -264,14 +274,16 @@ def getTruncationValuesRoverZ(data_A, data_B, maxtcs_A, maxtcs_B):
     maximum_A = np.amax(data_A,axis=(1,0))
     maximum_B = np.amax(data_B,axis=(1,0))
 
-    ###
-    ##quantities to read out for paul
+    #Option to read out means
+    print_means = False
     mean_A = np.mean(np.sum(data_A, axis=(2)))
     mean_B = np.mean(np.sum(data_B, axis=(2)))
     mean_A2 = np.mean(data_A, axis=(0,1))
     mean_B2 = np.mean(data_B, axis=(0,1))
-    ####
-    
+    if print_means:
+        print ("mean region A = "  + str(mean_A))
+        print ("mean region B = "  + str(mean_B))
+
     pc_A = np.percentile(data_A, 99, axis=(0,1))
     pc_B = np.percentile(data_B, 99,axis=(0,1))
 
@@ -538,11 +550,18 @@ def plotTruncation(eventData, outdir = ".", includePhi60 = True):
     pl.ylim((0,1100000))
     pl.savefig( outdir + "/phidivisionYIntegrated.png" )
 
-def plot_Truncation_tc_Pt(eventData, options_to_study, outdir = ".",  ):
-
+def plot_Truncation_tc_Pt(eventData, options_to_study, truncationConfig = None, outdir = ".",  ):
+    os.system("mkdir -p " + outdir)
+    
     #Load the per-event flucation data produced using 'checkFluctuations'
     with open(eventData, "rb") as filep:   
         data = pickle.load(filep)
+
+    #Load the number of links for the truncation options
+    nLinks = []
+    if ( truncationConfig != None ):
+        for option in options_to_study:
+            nLinks.append(truncationConfig['option'+str(option)]['nLinks'])
 
     nbinsROverZ = len(data[0][0][0]) #42
     axis =  np.histogram( np.empty(0), bins = nbinsROverZ, range = (0.076,0.58) )[1]
@@ -581,9 +600,11 @@ def plot_Truncation_tc_Pt(eventData, options_to_study, outdir = ".",  ):
         truncatedsum_B = np.sum( truncationB, axis=0 )
 
         #Divide to get the fraction, taking into account division by zero
-        if (options_to_study[t-1] < 4 ):
+        #We assume that the order of options in the input-data is the same as
+        #the order of options provided in the config
+        if (nLinks[t-1] == 3 ):
             ratioA = np.divide(   truncatedsum_A, totalsumInclusive , out=np.ones_like(truncatedsum_A), where=totalsumInclusive!=0 )
-        else:
+        elif (nLinks[t-1] == 4 ):
             ratioA = np.divide(   truncatedsum_A, totalsumA , out=np.ones_like(truncatedsum_A), where=totalsumA!=0 )
         ratioB = np.divide(   truncatedsum_B, totalsumB , out=np.ones_like(truncatedsum_B), where=totalsumB!=0 )
         
