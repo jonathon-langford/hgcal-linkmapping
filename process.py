@@ -420,7 +420,7 @@ def getlpGBTHists(data, module_hists):
     lpgbt_hists = []
 
     for p,phiselection in enumerate(module_hists):#phi > 60 and phi < 60
-        
+
         temp = {}
 
         for lpgbt in range(0,1600) :
