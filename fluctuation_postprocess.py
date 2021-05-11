@@ -132,8 +132,9 @@ def plot_NTCs_Vs_ROverZ(inputdata,axis,savename,truncation_curves=None,scaling=N
     roverz = np.take(axis,axis_indices)
 
     #Plot the 2D histogram
+    nTCbins = int(50*(42/(len(axis)-1)))
     pl.clf()
-    pl.hist2d( roverz , data_swap.flatten() , bins = (len(axis)-1,50),range=[[axis[0],axis[-1]], [0, 50]],norm=LogNorm())
+    pl.hist2d( roverz , data_swap.flatten() , bins = (len(axis)-1,nTCbins),range=[[axis[0],axis[-1]], [0, nTCbins]],norm=LogNorm())
     pl.colorbar().set_label("Number of Events")
     #Plot the various 1D truncation curves
     colours = ['red','orange','cyan','green','teal','darkviolet']
