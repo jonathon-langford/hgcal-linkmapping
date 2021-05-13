@@ -13,7 +13,13 @@ import matplotlib.pyplot as pl
 def print_numpy_plot(hists,outdir,plotname):
 
     os.system("mkdir -p " + outdir)
-    inclusive_hists = np.histogram( np.empty(0), bins = 42, range = (0.076,0.58) )
+
+    #Get binning from input hists
+    nROverZBins = hists[0].GetNbinsX()
+    rOverZMin = hists[0].GetXaxis().GetBinLowEdge(1)
+    rOverZMax = hists[0].GetXaxis().GetBinLowEdge(nROverZBins + 1)
+    
+    inclusive_hists = np.histogram( np.empty(0), bins = nROverZBins, range = (rOverZMin,rOverZMax) )
 
     numpy_hists = []
     for hist in hists:

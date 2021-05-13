@@ -6,5 +6,8 @@
     "average_tcs_sil": "average_tcs_sil_v11_relval_ttbar_20200625.csv",
     "average_tcs_scin": "average_tcs_scin_v11_relval_ttbar_20200625.csv",
     "configFileVersion": "TpgV7",
-    "createFlatFile": false
+    "createFlatFile": false,
+    "nROverZBins": 42,
+    "rOverZMin": 0.076,
+    "rOverZMax": 0.58
 }
