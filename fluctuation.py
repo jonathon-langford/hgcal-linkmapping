@@ -561,7 +561,7 @@ def main():
         subconfig = config['checkFluctuations']
         if 'tcPtConfig' in subconfig.keys():
             tcPtConfig = subconfig['tcPtConfig']
-            
+
         checkFluctuations(initial_state=subconfig['initial_state'], cmsswNtuple=subconfig['cmsswNtuple'], mappingFile=subconfig['mappingFile'], outputName=subconfig['outputName'], tcPtConfig = tcPtConfig, correctionConfig = correctionConfig, phisplitConfig = subconfig['phisplit'], truncationConfig = truncationConfig, binningConfig = binningConfig, save_ntc_hists=subconfig['save_ntc_hists'],beginEvent = subconfig['beginEvent'], endEvent = subconfig['endEvent'])
 
     #Plotting functions
