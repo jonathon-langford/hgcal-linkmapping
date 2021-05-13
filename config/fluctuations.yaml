@@ -20,9 +20,11 @@ binningConfig:
 
 truncationConfig:
   option1:
-    maxTCsA: 400
+    maxTCsA: 200
     maxTCsB: 200
     nLinks: 3
+    regionADefinition: X #X, Y or X+Y
+    regionBDefinition: Y #X, Y or X+Y
     predetermined_values: [ 1.,  6., 14., 13., 18., 13., 12., 17., 19., 11., 10., 14., 13.,
        13., 14., 12., 12., 14., 13., 11., 10., 13., 11., 13., 14., 12.,
         9.,  9.,  9., 10., 12.,  8.,  4.,  4.,  2.,  3.,  3.,  2.,  1.,
@@ -31,6 +33,8 @@ truncationConfig:
     maxTCsA: 400
     maxTCsB: 302
     nLinks: 3
+    regionADefinition: X+Y
+    regionBDefinition: Y    
     predetermined_values: [ 1.,  6., 16., 14., 17., 13., 13., 17., 19., 12., 10., 14., 12.,
        12., 13., 12., 12., 14., 12., 11., 10., 13., 11., 12., 14., 12.,
         9.,  9.,  9., 10., 12.,  8.,  4.,  4.,  2.,  3.,  3.,  2.,  1.,
@@ -39,6 +43,8 @@ truncationConfig:
     maxTCsA: 714
     maxTCsB: 357
     nLinks: 3
+    regionADefinition: X+Y
+    regionBDefinition: Y
     predetermined_values: [ 1., 12., 26., 23., 31., 23., 21., 30., 34., 20., 18., 25., 23.,
        23., 24., 21., 22., 25., 23., 19., 18., 23., 20., 23., 25., 22.,
        17., 17., 16., 18., 22., 14.,  6.,  6.,  5.,  5.,  5.,  3.,  3.,
@@ -47,6 +53,8 @@ truncationConfig:
     maxTCsA: 466
     maxTCsB: 466
     nLinks: 4
+    regionADefinition: X
+    regionBDefinition: Y    
     predetermined_values: [ 1.,  6., 16., 14., 19., 13., 15., 17., 15., 16., 15., 14., 15.,
        15., 15., 20., 17., 21., 17., 13., 14., 21., 15., 13., 15., 15.,
        12., 14., 11., 10.,  8.,  7.,  3.,  4.,  2.,  2.,  2.,  2.,  1.,
@@ -55,6 +63,8 @@ truncationConfig:
     maxTCsA: 780
     maxTCsB: 780
     nLinks: 4
+    regionADefinition: X
+    regionBDefinition: Y    
     predetermined_values: [ 2., 10., 28., 24., 32., 22., 25., 28., 26., 27., 25., 23., 26.,
        25., 24., 34., 28., 35., 28., 22., 24., 34., 24., 21., 26., 24.,
        20., 24., 18., 16., 14., 11.,  5.,  6.,  4.,  3.,  4.,  3.,  2.,
