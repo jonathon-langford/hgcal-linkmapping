@@ -5,7 +5,7 @@ import sys,os
 import yaml
 import pickle
 import numpy as np
-from process import loadDataFile,loadModuleTowerMappingFile,getMinilpGBTGroups,getBundles,getBundledlpgbtHistsRoot,getMiniGroupHists,getMinilpGBTGroups,getModuleHists,getlpGBTHists,getNumberOfModulesInEachBundle,getMiniModuleGroups,getMiniTowerGroups,getTowerBundles, calculateChiSquared
+from process import loadDataFile,loadModuleTowerMappingFile,getMinilpGBTGroups,getBundles,getBundledlpgbtHistsRoot,getMiniGroupHists,getMinilpGBTGroups,getModuleHists,getlpGBTHists,getNumberOfModulesInEachBundle,getMiniModuleGroups,getMiniTowerGroups,getTowerBundles,calculateChiSquared
 from geometryCorrections import applyGeometryCorrections
 from root_numpy import hist2array
 import matplotlib.pyplot as pl
@@ -131,6 +131,7 @@ def main():
         output_dir = config['output_dir']
         MappingFile = config['npy_configuration']['mappingFile']
         TowerMappingFile = config['npy_configuration']['towerMappingFile']
+        TowerPhiSplit = config['npy_configuration']['TowerPhiSplit']
         CMSSW_ModuleHists = config['npy_configuration']['CMSSW_ModuleHists']
 
         phisplitConfig = None
@@ -167,8 +168,13 @@ def main():
         nmodules = getNumberOfModulesInEachBundle(minigroups_modules,bundles)
         print ("max modules = ", max(nmodules))
         minigroups_towers = getMiniTowerGroups(towerdata, minigroups_modules)
-        bundled_towers = getTowerBundles(minigroups_towers, bundles)
-        max_towers = len(max(bundled_towers,key=len))
+        bundled_towers = getTowerBundles(minigroups_towers, bundles, TowerPhiSplit)
+        max_towers_list = []
+        n_phi_split = len(bundled_towers[0])
+        for i in range (n_phi_split):
+            bundled_towers_phi = [x[i] for x in bundled_towers]
+            max_towers_list.append(len(max(bundled_towers_phi,key=len)))
+        max_towers = max(max_towers_list)
         print ("max towers = ", max_towers)
         inclusive = inclusive_hists_input[0].Clone("inclusive_hists_input_inclusive")
         inclusive.Add( inclusive_hists_input[1] )

@@ -52,15 +52,12 @@ def loadModuleTowerMappingFile(MappingFile):
             module_towers = []
             if (m==0): continue #header line
             modulesplit = module.split()
+            nTowers = modulesplit[4]
+            towermaps = modulesplit[5:]
+            for tower in range (int(nTowers)):
+                module_towers.append([int(towermaps[2*tower]), int(towermaps[2*tower+1])])
 
-            #Get all data within square brackets
-            towermaps = re.findall(r"[^[]*\[([^]]*)\]", module)        
-
-            for tower in towermaps:
-                towersplit = tower.split(", ")
-                module_towers.append([int(towersplit[0]), int(towersplit[1])])
-
-            module_towermap[0, int(modulesplit[0]), int(modulesplit[1]), int(modulesplit[2])] = module_towers
+            module_towermap[int(modulesplit[0]), int(modulesplit[1]), int(modulesplit[2]) , int(modulesplit[3])] = module_towers
 
     return module_towermap
 
@@ -501,8 +498,6 @@ def getMiniTowerGroups(data, minigroups_modules):
 
         towerlist = []
         for module in module_list:
-            if ( module[0] == 1 ):
-                continue #no scintillator in module tower mapping file for now
             if ( (module[0],module[3],module[1],module[2]) in data ):
                 #silicon/scintillator, layer, u, v
                 towerlist.append(data[module[0],module[3],module[1],module[2]]);
@@ -517,9 +512,10 @@ def getMiniTowerGroups(data, minigroups_modules):
 
     return minigroups_towers
 
-def getTowerBundles(minigroups_towers, bundles):
+def getTowerBundles(minigroups_towers, bundles, phisplit=None):
 
     #For each bundle get a list of the unique tower bins touched by the constituent modules
+    #phisplit is a list indicating the bin numbers in phi where a split must be made
     all_bundles_towers = []
     
     for bundle in bundles:
@@ -528,8 +524,19 @@ def getTowerBundles(minigroups_towers, bundles):
             bundle_towers.append(minigroups_towers[minigroup])
         #Remove duplicates
         bundle_towers = [item for sublist in bundle_towers for item in sublist]
-        bundle_towers = np.unique(bundle_towers,axis=0).tolist()
-        all_bundles_towers.append(bundle_towers)
+        bundle_towers = np.unique(bundle_towers,axis=0)
+
+        bundle_towers_phi_split = []
+        
+        if phisplit != None and len(phisplit)>0:
+            bundle_towers_phi_split.append(bundle_towers[(bundle_towers[:,1]<phisplit[0])].tolist())
+            for i in range( (len(phisplit)-1) ):
+                bundle_towers_phi_split.append(bundle_towers[(bundle_towers[:,1]>=phisplit[i])&(bundle_towers[:,1]<phisplit[i+1])].tolist())
+            bundle_towers_phi_split.append(bundle_towers[(bundle_towers[:,1]>=phisplit[-1])].tolist())
+        else:
+            bundle_towers_phi_split.append(bundle_towers)
+        
+        all_bundles_towers.append(bundle_towers_phi_split)
         
     return all_bundles_towers
 
