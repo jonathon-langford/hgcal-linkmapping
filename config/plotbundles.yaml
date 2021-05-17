@@ -4,7 +4,7 @@ output_dir: plots
 npy_configuration:
   mappingFile: data/FeMappingTpgV7.txt
   towerMappingFile: data/tower_per_module-20210513-Silic8-Scint16.txt
-  TowerPhiSplit: [7,17]
+  TowerPhiSplit: [6,16]
   CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_ttbar_20210419.root
   phisplit:
     #How to split in phi, either 'per_roverz_bin' (midpoint splits taken from CMSSW_ModuleHists file) or 'fixed'

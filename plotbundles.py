@@ -174,8 +174,9 @@ def main():
         for i in range (n_phi_split):
             bundled_towers_phi = [x[i] for x in bundled_towers]
             max_towers_list.append(len(max(bundled_towers_phi,key=len)))
+
         max_towers = max(max_towers_list)
-        print ("max towers = ", max_towers)
+        print ("max towers in each phi region = ", max_towers_list)
         inclusive = inclusive_hists_input[0].Clone("inclusive_hists_input_inclusive")
         inclusive.Add( inclusive_hists_input[1] )
         phidivisionX = inclusive_hists_input[0].Clone("inclusive_hists_input_phidivisionX")

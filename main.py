@@ -20,7 +20,6 @@ from _ctypes import PyObj_FromPtr
 from process import getModuleHists, getlpGBTHists, getMiniGroupHists, getMinilpGBTGroups, getMiniModuleGroups, getBundles, getBundledlpgbtHists, getBundledlpgbtHistsRoot, calculateChiSquared, getMaximumNumberOfModulesInABundle
 from process import loadDataFile, loadModuleTowerMappingFile, getTCsPassing, getlpGBTLoadInfo, getHexModuleLoadInfo, getModuleTCHists, getMiniTowerGroups, getTowerBundles
 from plotting import plot, plot2D
-from example_minigroup_configuration import example_minigroup_configuration
 
 from geometryCorrections import applyGeometryCorrections
 

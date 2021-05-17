@@ -1,6 +1,6 @@
 function:
-  study_mapping: False
-  check_for_missing_modules: True
+  study_mapping: True
+  check_for_missing_modules: False
   plot_lpGBTLoads: False
   plot_ModuleLoads: False
   produce_AllocationFile: False               
@@ -14,18 +14,18 @@ study_mapping:
   MappingFile: data/FeMappingTpgV7.txt
   CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_ttbar_20210419.root
   TowerMappingFile: data/tower_per_module-20210513-Silic8-Scint16.txt
-  TowerPhiSplit: [7,17]
+  TowerPhiSplit: [6,16]
 
   #Algorithms for minimisation:
   #'random_hill_climb', 'simulated_annealing', 'save_root'
   algorithm: random_hill_climb
 
   #initial state configuation:
-  #'random', 'example', 'data/bundles_example-pickle-tpgv7.npy'
+  #'random', 'data/bundles_example-pickle-tpgv7.npy'
   initial_state: random
 
   random_seed: ~
-  max_iterations: 100000 
+  max_iterations: 200000 
 
   #Definition of a minigroup:
   #'bylayer_silicon_seprated', 'bylayer', 'minimal'
@@ -33,11 +33,11 @@ study_mapping:
 
   #Options for use in the chi2 function
   chi2:
-    include_errors_in_chi2: False
-    include_max_modules_in_chi2: False
-    include_max_towers_in_chi2: False
-    max_modules_weighting_factor: 10000
-    max_towers_weighting_factor: 10000
+    include_errors_in_chi2: True
+    include_max_modules_in_chi2: True
+    include_max_towers_in_chi2: True
+    max_modules_weighting_factor: 100000
+    max_towers_weighting_factor: 100000
 
   phisplit:
     #How to split in phi, either 'per_roverz_bin' (midpoint splits taken from CMSSW_ModuleHists file) or 'fixed'
