@@ -55,7 +55,7 @@ def loadModuleTowerMappingFile(MappingFile):
             nTowers = modulesplit[4]
             towermaps = modulesplit[5:]
             for tower in range (int(nTowers)):
-                module_towers.append([int(towermaps[2*tower]), int(towermaps[2*tower+1])])
+                module_towers.append([int(towermaps[3*tower]), int(towermaps[3*tower+1])])
 
             module_towermap[int(modulesplit[0]), int(modulesplit[1]), int(modulesplit[2]) , int(modulesplit[3])] = module_towers
 
