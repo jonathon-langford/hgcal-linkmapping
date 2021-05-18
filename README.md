@@ -64,28 +64,48 @@ Finally any corrections to account for differences between the geometry in the i
 
 ## Plotting the best mapping
 
-Once an output mapping configuration file has been obtained (with the `study_mapping` function described above), one might wish to plot the r/z histograms of the bundles (FPGAs). This is achieved using the `plotbundles.py` file and run like:
+Once an output mapping configuration file has been obtained (with the `study_mapping` function described above), one might wish to plot the r/z histograms of the 25 bundles (FPGAs), and take the ratio to the inclusive distribution divided by 24. This is achieved using the `plotbundles.py` file and run like:
 
 - `./plotbundles.py config/plotbundles.yaml`
 
 The configuration file uses very similar options to the `default` configuration file. The main differences are the `input_file` (the output mapping configuration from `study_mapping`) and the `output_dir` (the location where the plots should be saved.
 
-## `fluctuation.py`
+## Calculating truncation values and determining the effect of truncation, event by event.
 
-Takes as input a choice of lpgbt bundles, and bins the trigger cell data event by event
-There are several plotting scripts that investigate the impact of truncation on the number of trigger cells.
-Run using the config file `config/fluctuation.yaml`.
-Also the option to save the sum of (truncated or total) trigger cell p<sub>T</sub> as a function of R/Z for each event.
+### Filling the r/z histograms
 
-## `plotbundles.py`
+Once a mapping configuration from the `study_mapping` function has been found, the next step is to estimate the amount of truncation that would be needed in each r/z bin in order to stay within the limits given by the hardware.
+This is done using the two files `fluctuation.py` and `fluctuation_postprocess.py`. The first, `fluctuation.py` contains the `main` function as well as a function `checkFluctuations` to fill r/z histograms for each bundle in each event (where in practise the histograms are filled 6 times per event due to the six fold symmetry). 
+This is run in the following manner:
 
-Various plotting functions, mainly to plot the 24 R/Z histograms for each bundle, and take the ratio to the inclusive distribution over 24.
-Run using the config file `config/plotbundles.yaml`
+- `./fluctuation.py config/fluctuations.yaml`
+
+The relevant variables in the config file are now described.
+As in the file `default.yaml` the chosen function is set to be `True` or `False` in the first block. In this case `checkFluctuations` should be set to `True`.
+Some of the parameters are the same as in previous configs and are not described again.
+
+The block `checkFluctuations` provides the additional configurable parameters for this function.
+`beginEvent` and `endEvent` define the start and end events for running over.
+The relevant input file is the same TPG CMSSW `ROOT` file that was also used to produce the r/z histograms from `extract_data.cxx`. In addition one requires the `initial_state`, which is the output mapping configuration from the minimisation and the `mappingFile` used in the minimisation. The `outputName` name is also set here. The parameter `save_ntc_hists` determines if auxiliary histograms showing the number of trigger cells per module are saved, by default this is `False`.
+
+In addition to the familiar `phisplit` config there is also the `tcPtConfig`.
+There is the option (if `save_sum_tcPt` = `True`) to save the sum of (truncated or total) trigger cell p<sub>T</sub> as a function of r/z for each event.
+In this case one also needs to fill the  block `truncationConfig`, detailing the trigger cell limits and definition of the links.
+Various options of interest can be defined. Each must give the maximum number of TCs on a link in regionA and regionB (`maxTCsA` and `maxTCsB` respectively). Then the number of links between Stage 1 and Stage 2 (`nLinks`) as well as how regionA and regionB are defined in terms of `phiDivisionX` and `phiDivisionY` (`regionADefinition` and `regionBDefinition`).
+Finally it is necessary to give the TC truncation values in each r/z bin (as a list). These must be determined in an initial run (see below for how) as otherwise the output files are too large.
+
+### Determining the truncation values
+
+
 
 ## Further additional useful functions
 
 In `main.py`:
 
 - `plot_lpGBTLoads`, `plot_ModuleLoads`, : Processes MC event data and determines the average number of TCs, or words, per lpGBT
+
 In `rotate.py` and `rotate.cxx`
 - Python and C++ implementations of the mapping between 120 degree HGCal sectors in (u,v) coordinates.
+
+In `fluctuation.py`
+

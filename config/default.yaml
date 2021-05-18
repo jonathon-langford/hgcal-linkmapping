@@ -13,7 +13,7 @@ output_dir: .
 study_mapping:
   MappingFile: data/FeMappingTpgV7.txt
   CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_ttbar_20210419.root
-  TowerMappingFile: data/tower_per_module-20210513-Silic8-Scint16.txt
+  TowerMappingFile: data/tower_per_module-20210517-Silic8-Scint16.txt
   TowerPhiSplit: [6,16]
 
   #Algorithms for minimisation:

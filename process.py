@@ -52,12 +52,20 @@ def loadModuleTowerMappingFile(MappingFile):
             module_towers = []
             if (m==0): continue #header line
             modulesplit = module.split()
+            moduleType = int(modulesplit[0])
             nTowers = modulesplit[4]
             towermaps = modulesplit[5:]
-            for tower in range (int(nTowers)):
-                module_towers.append([int(towermaps[3*tower]), int(towermaps[3*tower+1])])
 
-            module_towermap[int(modulesplit[0]), int(modulesplit[1]), int(modulesplit[2]) , int(modulesplit[3])] = module_towers
+            countType = 0 #CE-E towers are separate from CE-H/Scintillator towers
+            if moduleType > 0:
+                countType = 1
+            for tower in range (int(nTowers)):
+                module_towers.append([countType, int(towermaps[3*tower]), int(towermaps[3*tower+1])])
+
+            if moduleType == 2:
+                module_towermap[1, int(modulesplit[1]), int(modulesplit[2]) , int(modulesplit[3])] = module_towers
+            else:
+                module_towermap[0, int(modulesplit[1]), int(modulesplit[2]) , int(modulesplit[3])] = module_towers
 
     return module_towermap
 
@@ -499,7 +507,7 @@ def getMiniTowerGroups(data, minigroups_modules):
         towerlist = []
         for module in module_list:
             if ( (module[0],module[3],module[1],module[2]) in data ):
-                #silicon/scintillator, layer, u, v
+                #(silicon CE-E/CE-H/scintillator), layer, u, v
                 towerlist.append(data[module[0],module[3],module[1],module[2]]);
             else:
                 print ( "Module missing from tower file (layer, u, v): ",module[3],module[1],module[2])
@@ -529,10 +537,10 @@ def getTowerBundles(minigroups_towers, bundles, phisplit=None):
         bundle_towers_phi_split = []
         
         if phisplit != None and len(phisplit)>0:
-            bundle_towers_phi_split.append(bundle_towers[(bundle_towers[:,1]<phisplit[0])].tolist())
+            bundle_towers_phi_split.append(bundle_towers[(bundle_towers[:,2]<phisplit[0])].tolist())
             for i in range( (len(phisplit)-1) ):
-                bundle_towers_phi_split.append(bundle_towers[(bundle_towers[:,1]>=phisplit[i])&(bundle_towers[:,1]<phisplit[i+1])].tolist())
-            bundle_towers_phi_split.append(bundle_towers[(bundle_towers[:,1]>=phisplit[-1])].tolist())
+                bundle_towers_phi_split.append(bundle_towers[(bundle_towers[:,2]>=phisplit[i])&(bundle_towers[:,2]<phisplit[i+1])].tolist())
+            bundle_towers_phi_split.append(bundle_towers[(bundle_towers[:,2]>=phisplit[-1])].tolist())
         else:
             bundle_towers_phi_split.append(bundle_towers)
         
