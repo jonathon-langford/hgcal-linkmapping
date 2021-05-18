@@ -15,8 +15,8 @@ corrections:
 
 binningConfig:
   nROverZBins: 42
-  rOverZMin: 0.076
-  rOverZMax: 0.58
+  rOverZMin: 0.07587128
+  rOverZMax: 0.55563514
 
 truncationConfig:
   option1:
