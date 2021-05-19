@@ -723,7 +723,7 @@ def getMaximumNumberOfModulesInABundle(minigroups_modules,bundles):
     maximum = max(getNumberOfModulesInEachBundle( minigroups_modules,bundles ))
     return maximum
 
-def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=1000,max_towers=None,weight_max_towers=1000,weight_proportionally=True):
+def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=1000,max_towers=None,weight_max_towers=[1000,1],weight_proportionally=True):
 
     use_error_squares = False
     #Check if the minigroup_hists were produced
@@ -740,11 +740,12 @@ def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=10
         use_max_modules = True
 
     #If optimisation of the number of towers touched in a bundle is performed
-    #Aim for the maximum to be as low as possible
+    #Either aim for the maximum to be as low as possible (option 1) or
+    #use a function that penalises very high values, but allows lower values with no penalty (option 2)
     use_max_towers = False
     if ( max_towers != None):
         use_max_towers = True
-
+        
     chi2_total = 0
     
     for i in range(len(inclusive)):
@@ -777,7 +778,10 @@ def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=10
         chi2_total += weight_max_modules * max_modules
 
     if use_max_towers:
-        chi2_total += weight_max_towers * max_towers
-
-
+        if weight_max_towers[1] == 1:
+            chi2_total += weight_max_towers[0] * max_towers
+        elif weight_max_towers[1] == 2:
+            if max_towers > 180:
+                chi2_total += weight_max_towers[0] * pow((max_towers-180),2)
+            
     return chi2_total

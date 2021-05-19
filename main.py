@@ -412,6 +412,8 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
     include_max_modules_in_chi2 = False
     include_max_towers_in_chi2 = False
     max_modules_weighting_factor = 1000
+    max_towers_weighting_option = 2
+    weight_bins_proportionally = True
     if chi2Config != None:
         if 'include_errors_in_chi2' in chi2Config.keys():
             include_errors_in_chi2 = chi2Config['include_errors_in_chi2']
@@ -423,7 +425,11 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
             include_max_towers_in_chi2 = chi2Config['include_max_towers_in_chi2']
         if 'max_modules_weighting_factor' in chi2Config.keys():
             max_towers_weighting_factor = chi2Config['max_towers_weighting_factor']
-
+        if 'max_towers_weighting_option' in chi2Config.keys():
+            max_towers_weighting_option = chi2Config['max_towers_weighting_option']
+        if 'weight_bins_proportionally' in chi2Config.keys():
+            weight_bins_proportionally = chi2Config['weight_bins_proportionally']
+            
     #Load tower data if required
     if include_max_towers_in_chi2:
         try:
@@ -470,7 +476,7 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
 
             max_towers = max(max_towers_list)
 
-        chi2 = calculateChiSquared(inclusive_hists,bundled_lpgbthists,max_modules,max_modules_weighting_factor,max_towers,max_towers_weighting_factor)
+        chi2 = calculateChiSquared(inclusive_hists,bundled_lpgbthists,max_modules,max_modules_weighting_factor,max_towers,[max_towers_weighting_factor,max_towers_weighting_option], weight_bins_proportionally)
 
         typicalchi2 = 600000000000
         if include_errors_in_chi2:

@@ -14,7 +14,7 @@ study_mapping:
   MappingFile: data/FeMappingTpgV7.txt
   CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_ttbar_20210518.root
   TowerMappingFile: data/tower_per_module-20210517-Silic8-Scint16.txt
-  TowerPhiSplit: [6,16]
+  TowerPhiSplit: [6,15]
 
   #Algorithms for minimisation:
   #'random_hill_climb', 'simulated_annealing', 'save_root'
@@ -36,8 +36,10 @@ study_mapping:
     include_errors_in_chi2: True
     include_max_modules_in_chi2: True
     include_max_towers_in_chi2: True
-    max_modules_weighting_factor: 100000
-    max_towers_weighting_factor: 100000
+    max_modules_weighting_factor: 30000
+    max_towers_weighting_option: 2 #option 1 uses max directly, option 2 uses it within a step-like function
+    max_towers_weighting_factor: 30000
+    weight_bins_proportionally: False #divide the chi2 in each r/z bin by the bin content 
 
   phisplit:
     #How to split in phi, either 'per_roverz_bin' (midpoint splits taken from CMSSW_ModuleHists file) or 'fixed'
@@ -57,22 +59,22 @@ check_for_missing_modules:
   inCMSSW: True
   inMappingFile: True
   MappingFile: data/FeMappingTpgV7.txt
-  CMSSW_Silicon: "data/average_tcs_sil_v11_relval_ttbar_20200611.csv"
-  CMSSW_Scintillator: "data/average_tcs_scin_v11_relval_ttbar_20200611.csv"
+  CMSSW_Silicon: "data/average_tcs/average_tcs_sil_v11_relval_ttbar_20200611.csv"
+  CMSSW_Scintillator: "data/average_tcs/average_tcs_scin_v11_relval_ttbar_20200611.csv"
 
 plot_lpGBTLoads:
   MappingFile: data/FeMappingTpgV7.txt
   # V11
-  CMSSW_Silicon: "data/average_tcs_sil_v11_relval_ttbar_20200611.csv"
-  CMSSW_Scintillator: "data/average_tcs_scin_v11_relval_ttbar_20200611.csv"
+  CMSSW_Silicon: "data/average_tcs/average_tcs_sil_v11_relval_ttbar_20200611.csv"
+  CMSSW_Scintillator: "data/average_tcs/average_tcs_scin_v11_relval_ttbar_20200611.csv"
   # V10
-  # CMSSW_Silicon: "data/average_tcs_sil_v10_qg_20200331.csv"
-  # CMSSW_Scintillator: "data/average_tcs_scin_v10_qg_20200331.csv"
+  # CMSSW_Silicon: "data/average_tcs/average_tcs_sil_v10_qg_20200331.csv"
+  # CMSSW_Scintillator: "data/average_tcs/average_tcs_scin_v10_qg_20200331.csv"
 
 plot_ModuleLoads:
   MappingFile: data/FeMappingTpgV7.txt
-  CMSSW_Silicon: "data/average_tcs_sil_v11_relval_ttbar_20200611.csv"
-  CMSSW_Scintillator: "data/average_tcs_scin_v11_relval_ttbar_20200611.csv"
+  CMSSW_Silicon: "data/average_tcs/average_tcs_sil_v11_relval_ttbar_20200611.csv"
+  CMSSW_Scintillator: "data/average_tcs/average_tcs_scin_v11_relval_ttbar_20200611.csv"
 
 produce_AllocationFile:
   MappingFile: data/FeMappingTpgV7.txt

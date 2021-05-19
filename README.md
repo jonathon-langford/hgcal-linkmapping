@@ -56,7 +56,13 @@ The initial state is either set to be `random` (in which case there is also the 
 
 `max_iterations` defines how many iterations should be performed in the minimisation before ending. Note that a best-so-far configuration is saved to a file if the minimisation is ended before reaching a minimum (either by keyboard interrupt, or reaching the maximum number of iterations. The `minigroup_type` parameter defines the philosophy of forming the mini-groups, which are small groups of modules which must be treated together as one in the minimisation. Generally `minimal` should be used and is the most tested.
 
-One has several options in defining the &Chi^2 used in the minimisation. One can use only the r/z values of each bundle histogram, rather than the associate statistical uncertainties (set `include_errors_in_chi2` to `False`). By default the maximum number of modules attached to an FPGA is used in the &Chi^2 (`include_max_modules_in_chi2`) as well as the maximum number of towers covered by an FPGA (`include_max_towers_in_chi2`). These values are included with an arbitrary constant weighting term (`max_modules_weighting_factor` and `max_towers_weighting_factor` respectively). If `TowerPhiSplit` is not None or `[]` then the maximum number of towers covered by an FPGA in a certain phi region is the relevant quantity. The default is `[6,16]`. The number refers to 5 degree bins in phi (where 0-5 degrees is bin 1). [6,16] therefore means 3 phi regions, phi < 30 degrees, 30 < phi < 80 and phi > 80 degrees.
+One has several options in defining the &Chi^2 used in the minimisation. One can use only the r/z values of each bundle histogram, rather than the associate statistical uncertainties (set `include_errors_in_chi2` to `False`).
+By default the maximum number of modules attached to an FPGA is used in the &Chi^2 (`include_max_modules_in_chi2`) as well as the maximum number of towers covered by an FPGA (`include_max_towers_in_chi2`).
+These values are included with an arbitrary constant weighting term (`max_modules_weighting_factor` and `max_towers_weighting_factor` respectively).
+
+For the towers, there is an additional option `max_towers_weighting_option` which is set to 1 if the maximum is used directly in the &Chi^2 and 2 if it is used with a step-like penalty function. If `TowerPhiSplit` is not None or `[]` then the maximum number of towers covered by an FPGA in a certain phi region is the relevant quantity. The default is `[6,15]`. The number refers to 5 degree bins in phi (where 0-5 degrees is bin 1). [6,16] therefore means 3 phi regions, phi < 30 degrees, 30 < phi < 80 and phi > 80 degrees.
+
+Finally there is an option `weight_bins_proportionally` which divides the &Chi^2 in each r/z bin by the bin value (multiplied by a constant).
 
 The configurable information in `phisplit` details how to split the 2D r/z histograms in phi, so as to define the phidivisionX and phidivisionY regions. The default is `per_rover_bin`, which means the mid-point in phi in each r/z bin is used as the division. The other option is `fixed`, which means the split is at a fixed point in `phi` (the values of which are defined using the `phidivisionX_fixvalue_min` and `phidivisionX_fixvalue_max` variables.
 
@@ -96,6 +102,15 @@ Finally it is necessary to give the TC truncation values in each r/z bin (as a l
 
 ### Determining the truncation values
 
+In order to determine the optimal trunction values one uses the function `studyTruncationOptions` in `fluctuation_postprocess.py`
+
+It is run in the same manner as before, ensuring `studyTruncationOptions` is set to `True` in the config file:
+- `./fluctuation.py config/fluctuations.yaml`
+
+The relevant parameters are:
+-  `eventData`, which is the output filled r/z histograms from the previous step
+-  `options_to_study`, the numbers of the different scenarios under investigation. These numbers correspond to the option number in the `truncationConfig` described previously.
+-  `truncation_values_method` - the two possibilities are `original` and `reverse`. The original method calculates the 99th percentile of TCs in each r/z bin and finds a scaling factor to apply to this to ensure that the sum of TCs is less than the maximum allowed. There is then a small redistribution of TCs. The reverse method aims to maintain a constant fraction of TCs truncated across r/z, and finds the highest possible fraction such that the sum of TCs is less than the maximum allowed. There is again a small redistribution of TCs.
 
 
 ## Further additional useful functions
@@ -107,5 +122,6 @@ In `main.py`:
 In `rotate.py` and `rotate.cxx`
 - Python and C++ implementations of the mapping between 120 degree HGCal sectors in (u,v) coordinates.
 
-In `fluctuation.py`
+In `fluctuation_postprocess.py`
+- plot_MeanMax, 
 

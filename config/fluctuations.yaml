@@ -106,7 +106,7 @@ plot_Truncation:
 studyTruncationOptions:
   eventData: data/alldata_neutrino_gun_2006022.txt
   options_to_study: [1,2,3] #Available options: [1,2,3,4,5]
-  truncation_values_method: original #Available options: original, reverse
+  truncation_values_method: reverse #Available options: original, reverse
   
 plot_Truncation_tc_Pt:
   eventData: data/alldata_ttbar_200813_sumpt.txt
