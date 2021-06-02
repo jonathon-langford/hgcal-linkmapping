@@ -13,7 +13,7 @@ import time
 import yaml
 import sys, os
 
-def plotMeanMax(eventData, outdir = ".", includePhi60 = True, binningConfig = None):
+def plotMeanMax(eventData, outdir = ".", includePhiDivisionY = True, binningConfig = None):
     #Load pickled per-event bundle histograms
     with open(eventData, "rb") as filep:   
         bundled_lpgbthists_allevents = pickle.load(filep)
@@ -51,7 +51,7 @@ def plotMeanMax(eventData, outdir = ".", includePhi60 = True, binningConfig = No
 
         list_over_events_maximum = np.maximum(list_over_events_inclusive, list_over_events_phi60*2 )
 
-        if ( includePhi60 ):
+        if ( includePhiDivisionY ):
             list_over_events = list_over_events_maximum
         else:
             list_over_events = list_over_events_inclusive
@@ -494,7 +494,7 @@ def studyTruncationOptions(eventData, options_to_study, truncation_values_method
         plot_frac_Vs_ROverZ( regionA, regionB, values, option['maxTCsA']/option['maxTCsB'], inclusive_hists[1], "Sum No. TCs Option " + str(study_num), outdir + "/frac_option_"+str(study_num))
 
 
-def plotTruncation(eventData, outdir = ".", includePhi60 = True, binningConfig = None):
+def plotTruncation(eventData, outdir = ".", useMaximumXY = True, binningConfig = None):
     os.system("mkdir -p " + outdir)
 
     if ( binningConfig != None ):        
@@ -514,15 +514,14 @@ def plotTruncation(eventData, outdir = ".", includePhi60 = True, binningConfig =
     inclusive_hists = np.histogram( np.empty(0), bins = nROverZBins, range = (rOverZMin,rOverZMax) )
     roverzBinning = inclusive_hists[1]
     
-    #Form the intersection of the inclusive and phi60 arrays,
-    #taking for each bin the maximum of the inclusive and phidivisionY x 2
-    inclusive_bundled_lpgbthists_allevents = phidivisionX_bundled_lpgbthists_allevents + phidivisionY_bundled_lpgbthists_allevents
-    maximum_bundled_lpgbthists_allevents = np.maximum(inclusive_bundled_lpgbthists_allevents,phidivisionY_bundled_lpgbthists_allevents*2)
-    
-    if ( includePhi60 ):
-        hists_max = np.amax(maximum_bundled_lpgbthists_allevents,axis=1)
+    #For each r/z bin take either the sum of the phidivisionX and phidivisionY arrays (inclusive) or the maximum of the two
+    if ( useMaximumXY ):
+        bundled_lpgbthists_allevents = np.maximum(phidivisionX_bundled_lpgbthists_allevents,phidivisionY_bundled_lpgbthists_allevents)
     else:
-        hists_max = np.amax(inclusive_bundled_lpgbthists_allevents,axis=1)
+        bundled_lpgbthists_allevents = phidivisionX_bundled_lpgbthists_allevents + phidivisionY_bundled_lpgbthists_allevents
+
+    #Per event take the maximum in each r/z bin across the 24 bundles 
+    hists_max = np.amax(bundled_lpgbthists_allevents,axis=1)
             
     #Find the maximum per bin over all events,
     #Then find the 99th percentile for a 1% truncation
@@ -548,14 +547,14 @@ def plotTruncation(eventData, outdir = ".", includePhi60 = True, binningConfig =
     for bundle_hists_phidivisionX,bundle_hists_phidivisionY in zip(phidivisionX_bundled_lpgbthists_allevents, phidivisionY_bundled_lpgbthists_allevents):
 
         bundle_hists_inclusive = bundle_hists_phidivisionX + bundle_hists_phidivisionY
-        bundle_hists_maximum = np.maximum(bundle_hists_inclusive,bundle_hists_phidivisionY*2)
+        bundle_hists_maximum = np.maximum(bundle_hists_inclusive,bundle_hists_phidivisionY)
         #24 arrays, with length of nROverZBins (42 by default)
 
         sum99 = []
         sum95 = []
         sum90 = []
 
-        if ( includePhi60 ):
+        if ( useMaximumXY ):
             bundle_hists = bundle_hists_maximum
         else:
             bundle_hists = bundle_hists_inclusive
