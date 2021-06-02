@@ -40,7 +40,7 @@ The other variables set the name of some auxiliary outputs (which are not needed
 The function relevant for performing the minimisation are found in `main.py` (which imports and uses additional functions from `process.py`.
 
 The code is run in the following manner:
-- ./main.py config/default.yaml i
+- `./main.py config/default.yaml i`
 
 where `i` is a number which is attached to the output configuration on completion. This is useful when running many parallel instances on a batch system.
 
@@ -98,7 +98,8 @@ In addition to the familiar `phisplit` config there is also the `tcPtConfig`.
 There is the option (if `save_sum_tcPt` = `True`) to save the sum of (truncated or total) trigger cell p<sub>T</sub> as a function of r/z for each event.
 In this case one also needs to fill the  block `truncationConfig`, detailing the trigger cell limits and definition of the links.
 Various options of interest can be defined. Each must give the maximum number of TCs on a link in regionA and regionB (`maxTCsA` and `maxTCsB` respectively). Then the number of links between Stage 1 and Stage 2 (`nLinks`) as well as how regionA and regionB are defined in terms of `phiDivisionX` and `phiDivisionY` (`regionADefinition` and `regionBDefinition`).
-Finally it is necessary to give the TC truncation values in each r/z bin (as a list). These must be determined in an initial run (see below for how) as otherwise the output files are too large.
+Finally it is necessary to give the TC truncation values in each r/z bin (as a list using the parameter `predetermined_values`). These must be determined in an initial run (see below for how) as otherwise the output files are too large.
+For each r/z bin the trigger cells are ordered in p<sub>T</sub> and the lowest valued ones are removed if truncation is required.
 
 ### Determining the truncation values
 
@@ -112,6 +113,13 @@ The relevant parameters are:
 -  `options_to_study`, the numbers of the different scenarios under investigation. These numbers correspond to the option number in the `truncationConfig` described previously.
 -  `truncation_values_method` - the two possibilities are `original` and `reverse`. The original method calculates the 99th percentile of TCs in each r/z bin and finds a scaling factor to apply to this to ensure that the sum of TCs is less than the maximum allowed. There is then a small redistribution of TCs. The reverse method aims to maintain a constant fraction of TCs truncated across r/z, and finds the highest possible fraction such that the sum of TCs is less than the maximum allowed. There is again a small redistribution of TCs.
 
+Once the truncation values have been found, one can use these as the `predetermined_values` needed when the `save_sum_tcPt' is set to `True` (as described above).
+
+## Plotting the effects of truncation
+
+When running with `studyTruncationOptions` set to `True` two types of plots will be produced:
+-  The first is a 2D histogram for each region A and B, showing the number of trigger cells versus r/z. This is filled once for each bunch crossing (x6 rotational symmetry) and for each bundle. 1D curves corresponding to the truncation values found for each option are printed on top.
+-  The second is a 1D line chart showing as a function of r/z the number of trigger cells after truncation in a bin divided by the total number in that bin (one line for each of regions A and B). One plot is produced for each option being studied. If the option `plot_Truncation_tc_Pt` is `True` then a similar plot is also produced showing the sum of TC p<sub>T</sub> after truncation in a bin divided by the total TC p<sub>T</sub> in that bin. Note if this option is `True` then the `eventData` input in the `plot_Truncation_tc_Pt` block also needs to be set. This `eventData` was produced when running `checkFluctuations` with `save_sum_tcPt` set to `True`.
 
 ## Further additional useful functions
 
@@ -123,5 +131,8 @@ In `rotate.py` and `rotate.cxx`
 - Python and C++ implementations of the mapping between 120 degree HGCal sectors in (u,v) coordinates.
 
 In `fluctuation_postprocess.py`
-- plot_MeanMax, 
+
+- `plot_Truncation`: If this is set to true in `config/fluctuations.yaml` then a study is performed looking at the effect of applying 1%, 5% and 10% truncation of trigger cells. The function assumes that there are two equally regions (i.e. phiDivisionX and phiDivisionY) with the same maximum TCs.
+
+plot_MeanMax, 
 
