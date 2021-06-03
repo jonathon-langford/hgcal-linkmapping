@@ -568,11 +568,11 @@ def main():
     
     if (config['function']['plot_MeanMax']):
         subconfig = config['plot_MeanMax']
-        plotMeanMax(eventData = subconfig['eventData'], outdir = config['output_dir'], includePhi60 = subconfig['includePhi60'], binningConfig = binningConfig )
+        plotMeanMax(eventData = subconfig['eventData'], outdir = config['output_dir'], includePhiDivisionY = subconfig['includePhiDivisionY'], binningConfig = binningConfig )
 
     if (config['function']['plot_Truncation']):
         subconfig = config['plot_Truncation']
-        plotTruncation(eventData = subconfig['eventData'],outdir = config['output_dir'], includePhi60 = subconfig['includePhi60'], binningConfig = binningConfig )
+        plotTruncation(eventData = subconfig['eventData'],outdir = config['output_dir'], includePhiDivisionY = subconfig['includePhiDivisionY'], binningConfig = binningConfig )
         
     if (config['function']['studyTruncationOptions']):
         subconfig = config['studyTruncationOptions']
