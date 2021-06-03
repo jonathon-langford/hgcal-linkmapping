@@ -1,7 +1,7 @@
 function:
-  checkFluctuations: False
-  plot_MeanMax: True
-  plot_Truncation: True
+  checkFluctuations: True
+  plot_MeanMax: False
+  plot_Truncation: False
   studyTruncationOptions: False
   plot_Truncation_tc_Pt: False
   
@@ -25,10 +25,9 @@ truncationConfig:
     nLinks: 3
     regionADefinition: X #X, Y or X+Y
     regionBDefinition: Y #X, Y or X+Y
-    predetermined_values: [ 1.,  6., 14., 13., 18., 13., 12., 17., 19., 11., 10., 14., 13.,
-       13., 14., 12., 12., 14., 13., 11., 10., 13., 11., 13., 14., 12.,
-        9.,  9.,  9., 10., 12.,  8.,  4.,  4.,  2.,  3.,  3.,  2.,  1.,
-        1.,  0.,  0.]
+    predetermined_values: [ 1,  4, 14, 13, 10,  9,  8,  7,  7,  7,  6,  6,  6,  6,  5,  5,  5,
+        5,  5,  5,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  3,  3,  3,  2,
+        2,  2,  2,  2,  2,  2,  2,  1]
   option2:
     maxTCsA: 400
     maxTCsB: 302
@@ -69,6 +68,15 @@ truncationConfig:
        25., 24., 34., 28., 35., 28., 22., 24., 34., 24., 21., 26., 24.,
        20., 24., 18., 16., 14., 11.,  5.,  6.,  4.,  3.,  4.,  3.,  2.,
         2.,  0.,  0.]
+  option7:
+    maxTCsA: 210
+    maxTCsB: 210
+    nLinks: 3
+    regionADefinition: X
+    regionBDefinition: Y    
+    predetermined_values: [ 1,  4, 13, 13, 10, 10,  8,  8,  8,  7,  7,
+    6,  6,  6,  6,  6,  5,  5,  5,  5,  5,  5,  5,  4,  4,  4,  4,  4,
+    4,  4,  4,  4,  3,  2,  2,  2,  2,  2,  2,  2,  2,  1]
 
 checkFluctuations:  
   beginEvent: -1
@@ -97,11 +105,11 @@ checkFluctuations:
   
 plot_MeanMax:
   eventData: data/alldata_neutrino_gun_2006022.txt
-  includePhi60: True
+  includePhiDivisionY: True
   
 plot_Truncation:
   eventData: data/alldata_neutrino_gun_2006022.txt
-  includePhi60: True
+  useMaximumXY: True
 
 studyTruncationOptions:
   eventData: data/alldata_neutrino_gun_2006022.txt

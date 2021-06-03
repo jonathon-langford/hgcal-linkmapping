@@ -39,7 +39,7 @@ study_mapping:
     max_modules_weighting_factor: 30000
     max_towers_weighting_option: 2 #option 1 uses max directly, option 2 uses it within a step-like function
     max_towers_weighting_factor: 30000
-    weight_bins_proportionally: False #divide the chi2 in each r/z bin by the bin content 
+    weight_bins_proportionally: True #divide the chi2 in each r/z bin by the bin content 
 
   phisplit:
     #How to split in phi, either 'per_roverz_bin' (midpoint splits taken from CMSSW_ModuleHists file) or 'fixed'
