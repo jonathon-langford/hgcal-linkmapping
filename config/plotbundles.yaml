@@ -3,8 +3,9 @@ output_dir: plots
 
 npy_configuration:
   mappingFile: data/FeMappingTpgV7.txt
-  towerMappingFile: data/splitModuleSumsOverTowers.txt
-  CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_ttbar_20210419.root
+  towerMappingFile: data/tower_per_module-20210517-Silic8-Scint16.txt
+  TowerPhiSplit: [6,15]
+  CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_ttbar_20210518.root
   phisplit:
     #How to split in phi, either 'per_roverz_bin' (midpoint splits taken from CMSSW_ModuleHists file) or 'fixed'
     #If 'fixed' need to provide split values in degrees,

@@ -52,15 +52,20 @@ def loadModuleTowerMappingFile(MappingFile):
             module_towers = []
             if (m==0): continue #header line
             modulesplit = module.split()
+            moduleType = int(modulesplit[0])
+            nTowers = modulesplit[4]
+            towermaps = modulesplit[5:]
 
-            #Get all data within square brackets
-            towermaps = re.findall(r"[^[]*\[([^]]*)\]", module)        
+            countType = 0 #CE-E towers are separate from CE-H/Scintillator towers
+            if moduleType > 0:
+                countType = 1
+            for tower in range (int(nTowers)):
+                module_towers.append([countType, int(towermaps[3*tower]), int(towermaps[3*tower+1])])
 
-            for tower in towermaps:
-                towersplit = tower.split(", ")
-                module_towers.append([int(towersplit[0]), int(towersplit[1])])
-
-            module_towermap[0, int(modulesplit[0]), int(modulesplit[1]), int(modulesplit[2])] = module_towers
+            if moduleType == 2:
+                module_towermap[1, int(modulesplit[1]), int(modulesplit[2]) , int(modulesplit[3])] = module_towers
+            else:
+                module_towermap[0, int(modulesplit[1]), int(modulesplit[2]) , int(modulesplit[3])] = module_towers
 
     return module_towermap
 
@@ -501,10 +506,8 @@ def getMiniTowerGroups(data, minigroups_modules):
 
         towerlist = []
         for module in module_list:
-            if ( module[0] == 1 ):
-                continue #no scintillator in module tower mapping file for now
             if ( (module[0],module[3],module[1],module[2]) in data ):
-                #silicon/scintillator, layer, u, v
+                #(silicon CE-E/CE-H/scintillator), layer, u, v
                 towerlist.append(data[module[0],module[3],module[1],module[2]]);
             else:
                 print ( "Module missing from tower file (layer, u, v): ",module[3],module[1],module[2])
@@ -517,9 +520,10 @@ def getMiniTowerGroups(data, minigroups_modules):
 
     return minigroups_towers
 
-def getTowerBundles(minigroups_towers, bundles):
+def getTowerBundles(minigroups_towers, bundles, phisplit=None):
 
     #For each bundle get a list of the unique tower bins touched by the constituent modules
+    #phisplit is a list indicating the bin numbers in phi where a split must be made
     all_bundles_towers = []
     
     for bundle in bundles:
@@ -528,8 +532,19 @@ def getTowerBundles(minigroups_towers, bundles):
             bundle_towers.append(minigroups_towers[minigroup])
         #Remove duplicates
         bundle_towers = [item for sublist in bundle_towers for item in sublist]
-        bundle_towers = np.unique(bundle_towers,axis=0).tolist()
-        all_bundles_towers.append(bundle_towers)
+        bundle_towers = np.unique(bundle_towers,axis=0)
+
+        bundle_towers_phi_split = []
+        
+        if phisplit != None and len(phisplit)>0:
+            bundle_towers_phi_split.append(bundle_towers[(bundle_towers[:,2]<phisplit[0])].tolist())
+            for i in range( (len(phisplit)-1) ):
+                bundle_towers_phi_split.append(bundle_towers[(bundle_towers[:,2]>=phisplit[i])&(bundle_towers[:,2]<phisplit[i+1])].tolist())
+            bundle_towers_phi_split.append(bundle_towers[(bundle_towers[:,2]>=phisplit[-1])].tolist())
+        else:
+            bundle_towers_phi_split.append(bundle_towers)
+        
+        all_bundles_towers.append(bundle_towers_phi_split)
         
     return all_bundles_towers
 
@@ -708,7 +723,7 @@ def getMaximumNumberOfModulesInABundle(minigroups_modules,bundles):
     maximum = max(getNumberOfModulesInEachBundle( minigroups_modules,bundles ))
     return maximum
 
-def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=1000,max_towers=None,weight_max_towers=1000,weight_proportionally=True):
+def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=1000,max_towers=None,weight_max_towers=[1000,1],weight_proportionally=True):
 
     use_error_squares = False
     #Check if the minigroup_hists were produced
@@ -725,7 +740,8 @@ def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=10
         use_max_modules = True
 
     #If optimisation of the number of towers touched in a bundle is performed
-    #Aim for the maximum to be as low as possible
+    #Either aim for the maximum to be as low as possible (option 1) or
+    #use a function that penalises very high values, but allows lower values with no penalty (option 2)
     use_max_towers = False
     if ( max_towers != None):
         use_max_towers = True
@@ -762,7 +778,10 @@ def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=10
         chi2_total += weight_max_modules * max_modules
 
     if use_max_towers:
-        chi2_total += weight_max_towers * max_towers
-
-
+        if weight_max_towers[1] == 1:
+            chi2_total += weight_max_towers[0] * max_towers
+        elif weight_max_towers[1] == 2:
+            if max_towers > 180:
+                chi2_total += weight_max_towers[0] * pow((max_towers-180),2)
+            
     return chi2_total

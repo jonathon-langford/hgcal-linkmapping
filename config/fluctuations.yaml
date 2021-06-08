@@ -1,7 +1,7 @@
 function:
-  checkFluctuations: False
-  plot_MeanMax: True
-  plot_Truncation: True
+  checkFluctuations: True
+  plot_MeanMax: False
+  plot_Truncation: False
   studyTruncationOptions: False
   plot_Truncation_tc_Pt: False
   
@@ -15,22 +15,25 @@ corrections:
 
 binningConfig:
   nROverZBins: 42
-  rOverZMin: 0.076
-  rOverZMax: 0.58
+  rOverZMin: 0.07587128
+  rOverZMax: 0.55563514
 
 truncationConfig:
   option1:
-    maxTCsA: 400
+    maxTCsA: 200
     maxTCsB: 200
     nLinks: 3
-    predetermined_values: [ 1.,  6., 14., 13., 18., 13., 12., 17., 19., 11., 10., 14., 13.,
-       13., 14., 12., 12., 14., 13., 11., 10., 13., 11., 13., 14., 12.,
-        9.,  9.,  9., 10., 12.,  8.,  4.,  4.,  2.,  3.,  3.,  2.,  1.,
-        1.,  0.,  0.]
+    regionADefinition: X #X, Y or X+Y
+    regionBDefinition: Y #X, Y or X+Y
+    predetermined_values: [ 1,  4, 14, 13, 10,  9,  8,  7,  7,  7,  6,  6,  6,  6,  5,  5,  5,
+        5,  5,  5,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  3,  3,  3,  2,
+        2,  2,  2,  2,  2,  2,  2,  1]
   option2:
     maxTCsA: 400
     maxTCsB: 302
     nLinks: 3
+    regionADefinition: X+Y
+    regionBDefinition: Y    
     predetermined_values: [ 1.,  6., 16., 14., 17., 13., 13., 17., 19., 12., 10., 14., 12.,
        12., 13., 12., 12., 14., 12., 11., 10., 13., 11., 12., 14., 12.,
         9.,  9.,  9., 10., 12.,  8.,  4.,  4.,  2.,  3.,  3.,  2.,  1.,
@@ -39,6 +42,8 @@ truncationConfig:
     maxTCsA: 714
     maxTCsB: 357
     nLinks: 3
+    regionADefinition: X+Y
+    regionBDefinition: Y
     predetermined_values: [ 1., 12., 26., 23., 31., 23., 21., 30., 34., 20., 18., 25., 23.,
        23., 24., 21., 22., 25., 23., 19., 18., 23., 20., 23., 25., 22.,
        17., 17., 16., 18., 22., 14.,  6.,  6.,  5.,  5.,  5.,  3.,  3.,
@@ -47,6 +52,8 @@ truncationConfig:
     maxTCsA: 466
     maxTCsB: 466
     nLinks: 4
+    regionADefinition: X
+    regionBDefinition: Y    
     predetermined_values: [ 1.,  6., 16., 14., 19., 13., 15., 17., 15., 16., 15., 14., 15.,
        15., 15., 20., 17., 21., 17., 13., 14., 21., 15., 13., 15., 15.,
        12., 14., 11., 10.,  8.,  7.,  3.,  4.,  2.,  2.,  2.,  2.,  1.,
@@ -55,17 +62,28 @@ truncationConfig:
     maxTCsA: 780
     maxTCsB: 780
     nLinks: 4
+    regionADefinition: X
+    regionBDefinition: Y    
     predetermined_values: [ 2., 10., 28., 24., 32., 22., 25., 28., 26., 27., 25., 23., 26.,
        25., 24., 34., 28., 35., 28., 22., 24., 34., 24., 21., 26., 24.,
        20., 24., 18., 16., 14., 11.,  5.,  6.,  4.,  3.,  4.,  3.,  2.,
         2.,  0.,  0.]
+  option7:
+    maxTCsA: 210
+    maxTCsB: 210
+    nLinks: 3
+    regionADefinition: X
+    regionBDefinition: Y    
+    predetermined_values: [ 1,  4, 13, 13, 10, 10,  8,  8,  8,  7,  7,
+    6,  6,  6,  6,  6,  5,  5,  5,  5,  5,  5,  5,  4,  4,  4,  4,  4,
+    4,  4,  4,  4,  3,  2,  2,  2,  2,  2,  2,  2,  2,  1]
 
 checkFluctuations:  
   beginEvent: -1
   endEvent: -1
-  initial_state: data/bundles_job_best_neutrinogun_200617.npy
+  initial_state: data/bundles_example-pickle-tpgv7.npy
   cmsswNtuple: data/small_v11_relval_ttbar_200611.root
-  outputName: alldata_neutrino_gun_2006022
+  outputName: alldata_neutrino_gun
   mappingFile: data/FeMappingTpgV7.txt
   save_ntc_hists: False
   
@@ -81,22 +99,23 @@ checkFluctuations:
     #'per_roverz_bin', 'fixed'
     type: per_roverz_bin
     
-    splitfile: data/ROverZHistograms_v11_relval_ttbar_20210419.root
+    splitfile: data/ROverZHistograms_v11_relval_ttbar_20210518.root
     phidivisionX_fixvalue_min: 55 #degrees
     phidivisionY_fixvalue_max: 55 #degrees
   
 plot_MeanMax:
   eventData: data/alldata_neutrino_gun_2006022.txt
-  includePhi60: True
+  useMaximumXY: True
+  plotIndividualEvents: False
   
 plot_Truncation:
   eventData: data/alldata_neutrino_gun_2006022.txt
-  includePhi60: True
+  useMaximumXY: True
 
 studyTruncationOptions:
   eventData: data/alldata_neutrino_gun_2006022.txt
   options_to_study: [1,2,3] #Available options: [1,2,3,4,5]
-  truncation_values_method: original #Available options: original, reverse
+  truncation_values_method: reverse #Available options: original, reverse
   
 plot_Truncation_tc_Pt:
   eventData: data/alldata_ttbar_200813_sumpt.txt

@@ -20,7 +20,6 @@ from _ctypes import PyObj_FromPtr
 from process import getModuleHists, getlpGBTHists, getMiniGroupHists, getMinilpGBTGroups, getMiniModuleGroups, getBundles, getBundledlpgbtHists, getBundledlpgbtHistsRoot, calculateChiSquared, getMaximumNumberOfModulesInABundle
 from process import loadDataFile, loadModuleTowerMappingFile, getTCsPassing, getlpGBTLoadInfo, getHexModuleLoadInfo, getModuleTCHists, getMiniTowerGroups, getTowerBundles
 from plotting import plot, plot2D
-from example_minigroup_configuration import example_minigroup_configuration
 
 from geometryCorrections import applyGeometryCorrections
 
@@ -307,7 +306,6 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
     with open("hgcal_trigger_link_mapping_v1.json", 'w') as fp:
         #data = json.dumps(json_main, indent=2, ensure_ascii=False)
         data = json.dumps(json_main, ensure_ascii=False, cls=MyEncoder, indent=4)
-        #print (data)
         fp.write(data)
     
 def produce_nTCsPerModuleHists(MappingFile,allocation,CMSSW_ModuleHists,minigroup_type="minimal",correctionConfig=None):
@@ -380,7 +378,7 @@ def check_for_missing_modules_inCMSSW(MappingFile,CMSSW_Silicon,CMSSW_Scintillat
     
     
 
-def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",initial_state="best_so_far",random_seed=None,max_iterations=100000,output_dir=".",print_level=0, minigroup_type="minimal",correctionConfig=None, phisplitConfig=None, chi2Config=None, TowerMappingFile=None):
+def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",initial_state="best_so_far",random_seed=None,max_iterations=100000,output_dir=".",print_level=0, minigroup_type="minimal",correctionConfig=None, phisplitConfig=None, chi2Config=None, TowerMappingFile=None, TowerPhiSplit=None):
 
     #Load external data
     data = loadDataFile(MappingFile) #dataframe
@@ -414,6 +412,8 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
     include_max_modules_in_chi2 = False
     include_max_towers_in_chi2 = False
     max_modules_weighting_factor = 1000
+    max_towers_weighting_option = 2
+    weight_bins_proportionally = True
     if chi2Config != None:
         if 'include_errors_in_chi2' in chi2Config.keys():
             include_errors_in_chi2 = chi2Config['include_errors_in_chi2']
@@ -425,7 +425,11 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
             include_max_towers_in_chi2 = chi2Config['include_max_towers_in_chi2']
         if 'max_modules_weighting_factor' in chi2Config.keys():
             max_towers_weighting_factor = chi2Config['max_towers_weighting_factor']
-
+        if 'max_towers_weighting_option' in chi2Config.keys():
+            max_towers_weighting_option = chi2Config['max_towers_weighting_option']
+        if 'weight_bins_proportionally' in chi2Config.keys():
+            weight_bins_proportionally = chi2Config['weight_bins_proportionally']
+            
     #Load tower data if required
     if include_max_towers_in_chi2:
         try:
@@ -462,10 +466,17 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
         if include_max_modules_in_chi2:
             max_modules = getMaximumNumberOfModulesInABundle(minigroups_modules,bundles)
         if include_max_towers_in_chi2:
-            bundled_towers = getTowerBundles(minigroups_towers, bundles)
-            max_towers = len(max(bundled_towers,key=len))#Get the length of bundle with the greatest number of towers
+            bundled_towers = getTowerBundles(minigroups_towers, bundles, TowerPhiSplit)
             
-        chi2 = calculateChiSquared(inclusive_hists,bundled_lpgbthists,max_modules,max_modules_weighting_factor,max_towers,max_towers_weighting_factor)
+            max_towers_list = []
+            n_phi_split = len(bundled_towers[0])
+            for i in range (n_phi_split):
+                bundled_towers_phi = [x[i] for x in bundled_towers]
+                max_towers_list.append(len(max(bundled_towers_phi,key=len)))#Get the length of bundle with the greatest number of towers in each phi_split region
+
+            max_towers = max(max_towers_list)
+
+        chi2 = calculateChiSquared(inclusive_hists,bundled_lpgbthists,max_modules,max_modules_weighting_factor,max_towers,[max_towers_weighting_factor,max_towers_weighting_option], weight_bins_proportionally)
 
         typicalchi2 = 600000000000
         if include_errors_in_chi2:
@@ -606,7 +617,7 @@ def main():
         
             
         study_mapping(subconfig['MappingFile'],subconfig['CMSSW_ModuleHists'],algorithm=subconfig['algorithm'],initial_state=subconfig['initial_state'],random_seed=subconfig['random_seed'],max_iterations=subconfig['max_iterations'],output_dir=config['output_dir'],print_level=config['print_level'],
-                      minigroup_type=subconfig['minigroup_type'],correctionConfig = correctionConfig,phisplitConfig=phisplitConfig,chi2Config=chi2Config,TowerMappingFile=subconfig['TowerMappingFile']
+                      minigroup_type=subconfig['minigroup_type'],correctionConfig = correctionConfig,phisplitConfig=phisplitConfig,chi2Config=chi2Config,TowerMappingFile=subconfig['TowerMappingFile'],TowerPhiSplit=subconfig['TowerPhiSplit']
             )
 
 

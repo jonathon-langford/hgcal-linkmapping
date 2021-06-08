@@ -166,7 +166,7 @@ unsigned etaphiMapping(unsigned layer, std::pair<int,int> &etaphi, std::string c
 
 std::pair<float,float> getEtaPhi(float x, float y, float z){
 
-  float r = std::sqrt( x*x + y*y  );
+  float r = std::sqrt( x*x + y*y );
   float phi = std::atan2(y,x);
   float eta = -std::log(std::tan(std::atan2( r,z)/2));
   return std::make_pair(eta,phi);
