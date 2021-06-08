@@ -125,7 +125,7 @@ When running with `studyTruncationOptions` set to `True` two types of plots will
 
 In `main.py`:
 
-- `plot_lpGBTLoads`, `plot_ModuleLoads`, : Processes MC event data and determines the average number of TCs, or words, per lpGBT
+- `plot_lpGBTLoads`, `plot_ModuleLoads`: Processes MC event data and determines the average number of TCs, or words, per lpGBT
 
 In `rotate.py` and `rotate.cxx`
 - Python and C++ implementations of the mapping between 120 degree HGCal sectors in (u,v) coordinates.
@@ -134,5 +134,5 @@ In `fluctuation_postprocess.py`
 
 - `plot_Truncation`: If this is set to true in `config/fluctuations.yaml` then a study is performed looking at the effect of applying 1%, 5% and 10% truncation of trigger cells. The function assumes that there are two equally regions (i.e. phiDivisionX and phiDivisionY) with the same maximum TCs.
 
-plot_MeanMax, 
+- `plot_MeanMax`: If this is set to true in `config/fluctuations.yaml` then a histogram is produced for each bundle (24 in total) showing maximum number of TCs seen over all events in each r/z bin as well as the mean, and the mean plus the standard deviation. There is also a summary plot produced showing the maximum of each bundle as a function of r/z plotted on top of each other.  There are two optional arguments. Firstly if `useMaximumXY` is `True` (which it is by default) then for each event the maximum is taken of the r/z bin in the phidivisionX and phidivisionY regions. Otherwise the sum is taken. Secondly if `plotIndividualEvents` is set to `True` then for bundle 0 the r/z values for each event are plotted on the same histogram.
 

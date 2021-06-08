@@ -105,7 +105,8 @@ checkFluctuations:
   
 plot_MeanMax:
   eventData: data/alldata_neutrino_gun_2006022.txt
-  includePhiDivisionY: True
+  useMaximumXY: True
+  plotIndividualEvents: False
   
 plot_Truncation:
   eventData: data/alldata_neutrino_gun_2006022.txt
