@@ -745,7 +745,7 @@ def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=10
     use_max_towers = False
     if ( max_towers != None):
         use_max_towers = True
-        
+
     chi2_total = 0
     
     for i in range(len(inclusive)):
