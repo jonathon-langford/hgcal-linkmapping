@@ -43,9 +43,9 @@ def plotMeanMax(eventData, outdir = ".", useMaximumXY = True, binningConfig = No
     else:
         bundled_lpgbthists_allevents = phidivisionX_bundled_lpgbthists_allevents + phidivisionY_bundled_lpgbthists_allevents
 
-    nbundles = len(bundled_lpgbthists_allevents[0]) #24
+    nBundles = len(bundled_lpgbthists_allevents[0]) #24 by default
     
-    for bundle in range(nbundles):
+    for bundle in range(nBundles):
         bundle_list = bundled_lpgbthists_allevents[:,bundle,:]
 
         hist_max = np.amax(bundle_list,axis=0)
@@ -377,11 +377,11 @@ def loadFluctuationData(eventData):
     dataX = 0
     dataY = 1
 
-    nbundles = len(bundled_lpgbthists_allevents[0][0]) #24
+    nBundles = len(bundled_lpgbthists_allevents[0][0]) #24 by default
     nbins = len(bundled_lpgbthists_allevents[0][0][0]) #42 by default
     
-    dataX_bundled_lpgbthists_allevents = np.empty((len(bundled_lpgbthists_allevents),nbundles,nbins))
-    dataY_bundled_lpgbthists_allevents = np.empty((len(bundled_lpgbthists_allevents),nbundles,nbins))
+    dataX_bundled_lpgbthists_allevents = np.empty((len(bundled_lpgbthists_allevents),nBundles,nbins))
+    dataY_bundled_lpgbthists_allevents = np.empty((len(bundled_lpgbthists_allevents),nBundles,nbins))
 
     for e,event in enumerate(bundled_lpgbthists_allevents):        
         dataX_bundled_lpgbthists_allevents[e] = np.array(list(event[dataX].values()))
@@ -501,6 +501,8 @@ def plotTruncation(eventData, outdir = ".", useMaximumXY = True, binningConfig =
     #Load pickled per-event bundle histograms
     phidivisionX_bundled_lpgbthists_allevents,phidivisionY_bundled_lpgbthists_allevents = loadFluctuationData(eventData)
 
+    nBundles = len(phidivisionX_bundled_lpgbthists_allevents[0]) #24 by default
+    
     #To get binning for r/z histograms
     inclusive_hists = np.histogram( np.empty(0), bins = nROverZBins, range = (rOverZMin,rOverZMax) )
     roverzBinning = inclusive_hists[1]
@@ -511,7 +513,7 @@ def plotTruncation(eventData, outdir = ".", useMaximumXY = True, binningConfig =
     else:
         bundled_lpgbthists_allevents = phidivisionX_bundled_lpgbthists_allevents + phidivisionY_bundled_lpgbthists_allevents
 
-    #Per event take the maximum in each r/z bin across the 24 bundles 
+    #Per event take the maximum in each r/z bin across the nBundles bundles 
     hists_max = np.amax(bundled_lpgbthists_allevents,axis=1)
             
     #Find the maximum per bin over all events,
@@ -539,7 +541,7 @@ def plotTruncation(eventData, outdir = ".", useMaximumXY = True, binningConfig =
 
         bundle_hists_inclusive = bundle_hists_phidivisionX + bundle_hists_phidivisionY
         bundle_hists_maximum = np.maximum(bundle_hists_inclusive,bundle_hists_phidivisionY)
-        #24 arrays, with length of nROverZBins (42 by default)
+        #nBundles arrays (24 by default), with length of nROverZBins (42 by default)
 
         sum99 = []
         sum95 = []
@@ -558,7 +560,7 @@ def plotTruncation(eventData, outdir = ".", useMaximumXY = True, binningConfig =
             sum90.append ( np.where( np.less( overall_max90p, bundle ), overall_max90p, bundle )  )
         
 
-        total_per_event.append( np.sum(bundle_hists, axis=1 ))        #array with length of 24 (sum over the bins - 42 by default)
+        total_per_event.append( np.sum(bundle_hists, axis=1 )) #array with length of nBundles (24 by default), (sum over the bins - 42 by default)
         total_per_event99.append( np.sum(sum99, axis=1 ))
         total_per_event95.append( np.sum(sum95, axis=1 ))
         total_per_event90.append( np.sum(sum90, axis=1 ))
@@ -571,7 +573,7 @@ def plotTruncation(eventData, outdir = ".", useMaximumXY = True, binningConfig =
     #Calculating the best possible given the per-event fluctuations
 
     #For a given r/z bin calculate the mean over all events
-    #and add 2.5x the average of the 24 bundles' RMS
+    #and add 2.5x the average of the nBundles (24 by default) bundles' RMS
     best_likely = np.mean(inclusive_bundled_lpgbthists_allevents,axis=(0,1))+2.5*np.mean(np.std(inclusive_bundled_lpgbthists_allevents,axis=(0)),axis=0)
     ratio_to_best = np.divide(overall_max99p,best_likely,out=np.zeros_like(overall_max99p),where=best_likely!=0)
     
@@ -581,9 +583,9 @@ def plotTruncation(eventData, outdir = ".", useMaximumXY = True, binningConfig =
     print ("Sum of per-bin maximum TC (over bundles and events) with 5% truncation = ", np.round(np.sum(np.amax(max_per_event_perbin95,axis=0))))
     print ("Sum of per-bin maximum TC (over bundles and events) with 10% truncation = ", np.round(np.sum(np.amax(max_per_event_perbin90,axis=0))))
 
-    pl.hist(np.sum(np.array(total_per_event)-np.array(total_per_event99),axis=1)/(24),50,(0,5),histtype='step',log=True,label='1% truncation')
-    pl.hist(np.sum(np.array(total_per_event)-np.array(total_per_event95),axis=1)/(24),50,(0,5),histtype='step',log=True,label='5% truncation')
-    pl.hist(np.sum(np.array(total_per_event)-np.array(total_per_event90),axis=1)/(24),50,(0,5),histtype='step',log=True,label='10% truncation')    
+    pl.hist(np.sum(np.array(total_per_event)-np.array(total_per_event99),axis=1)/(nBundles),50,(0,5),histtype='step',log=True,label='1% truncation')
+    pl.hist(np.sum(np.array(total_per_event)-np.array(total_per_event95),axis=1)/(nBundles),50,(0,5),histtype='step',log=True,label='5% truncation')
+    pl.hist(np.sum(np.array(total_per_event)-np.array(total_per_event90),axis=1)/(nBundles),50,(0,5),histtype='step',log=True,label='10% truncation')    
     pl.xlabel('Number of TCs truncated on average per bundle')
     
     pl.ylabel('Number of Events')
