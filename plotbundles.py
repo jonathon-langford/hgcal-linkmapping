@@ -134,10 +134,20 @@ def main():
         TowerPhiSplit = config['npy_configuration']['TowerPhiSplit']
         CMSSW_ModuleHists = config['npy_configuration']['CMSSW_ModuleHists']
 
+        #Load FPGA Information
+        if 'fpgas' in config.keys():
+            fpgaConfig = config['fpgas']
+            nBundles = fpgaConfig["nBundles"]
+            maxInputs = fpgaConfig["maxInputs"]
+        else:
+            #Set defaults
+            nBundles = 24
+            maxInputs = 72
+
         phisplitConfig = None
         if 'phisplit' in config['npy_configuration'].keys():
             phisplitConfig = config['npy_configuration']['phisplit']
-
+            
         data = loadDataFile(MappingFile) #dataframe
         towerdata = loadModuleTowerMappingFile(TowerMappingFile)
         minigroups,minigroups_swap = getMinilpGBTGroups(data)
@@ -153,7 +163,7 @@ def main():
                 phidivisionX_fixvalue_min = phisplitConfig['phidivisionX_fixvalue_min']
             if 'phidivisionY_fixvalue_max' in phisplitConfig.keys():
                 phidivisionY_fixvalue_max = phisplitConfig['phidivisionY_fixvalue_max']
-
+        
         inclusive_hists_input,module_hists = getModuleHists(CMSSW_ModuleHists, split = split, phidivisionX_fixvalue_min = phidivisionX_fixvalue_min, phidivisionY_fixvalue_max = phidivisionY_fixvalue_max)
         if 'corrections' in config.keys():
             if config['corrections'] != None:
