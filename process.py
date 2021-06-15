@@ -723,7 +723,7 @@ def getMaximumNumberOfModulesInABundle(minigroups_modules,bundles):
     maximum = max(getNumberOfModulesInEachBundle( minigroups_modules,bundles ))
     return maximum
 
-def calculateChiSquared(inclusive,grouped,nBundles=24,max_modules=None,weight_max_modules=1000,max_towers=None,weight_max_towers=[1000,1],weight_proportionally=True):
+def calculateChiSquared(inclusive,grouped,nBundles=24,max_modules=None,weight_max_modules=1000,max_towers=None,weight_max_towers=[1000,1,180],weight_proportionally=True):
 
     use_error_squares = False
     #Check if the minigroup_hists were produced
@@ -781,7 +781,7 @@ def calculateChiSquared(inclusive,grouped,nBundles=24,max_modules=None,weight_ma
         if weight_max_towers[1] == 1:
             chi2_total += weight_max_towers[0] * max_towers
         elif weight_max_towers[1] == 2:
-            if max_towers > 180:
-                chi2_total += weight_max_towers[0] * pow((max_towers-180),2)
+            if max_towers > weight_max_towers[2]:
+                chi2_total += weight_max_towers[0] * pow((max_towers-weight_max_towers[2]),2)
             
     return chi2_total

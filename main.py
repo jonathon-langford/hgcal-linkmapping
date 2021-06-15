@@ -448,7 +448,9 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
     include_max_modules_in_chi2 = False
     include_max_towers_in_chi2 = False
     max_modules_weighting_factor = 1000
+    max_towers_weighting_factor = 30000
     max_towers_weighting_option = 2
+    max_towers_step_point = 180
     weight_bins_proportionally = True
     if chi2Config != None:
         if 'include_errors_in_chi2' in chi2Config.keys():
@@ -463,6 +465,8 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
             max_towers_weighting_factor = chi2Config['max_towers_weighting_factor']
         if 'max_towers_weighting_option' in chi2Config.keys():
             max_towers_weighting_option = chi2Config['max_towers_weighting_option']
+        if 'max_towers_step_point' in chi2Config.keys():
+            max_towers_step_point = chi2Config['max_towers_step_point']
         if 'weight_bins_proportionally' in chi2Config.keys():
             weight_bins_proportionally = chi2Config['weight_bins_proportionally']
             
@@ -512,7 +516,7 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
 
             max_towers = max(max_towers_list)
 
-        chi2 = calculateChiSquared(inclusive_hists,bundled_lpgbthists,nBundles,max_modules,max_modules_weighting_factor,max_towers,[max_towers_weighting_factor,max_towers_weighting_option], weight_bins_proportionally)
+        chi2 = calculateChiSquared(inclusive_hists,bundled_lpgbthists,nBundles,max_modules,max_modules_weighting_factor,max_towers,[max_towers_weighting_factor,max_towers_weighting_option,max_towers_step_point], weight_bins_proportionally)
 
         typicalchi2 = 600000000000
         if include_errors_in_chi2:
@@ -575,7 +579,7 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
         bundled_hists_root = getBundledlpgbtHistsRoot(minigroup_hists_root,bundles)
         bundled_hists = getBundledlpgbtHists(minigroup_hists,bundles)
 
-        chi2 = calculateChiSquared(inclusive_hists,bundled_hists,nBundles,max_modules,max_modules_weighting_factor,max_towers,[max_towers_weighting_factor,max_towers_weighting_option], weight_bins_proportionally)
+        chi2 = calculateChiSquared(inclusive_hists,bundled_hists,nBundles,max_modules,max_modules_weighting_factor,max_towers,[max_towers_weighting_factor,max_towers_weighting_option,max_towers_step_point], weight_bins_proportionally)
         newfile = ROOT.TFile("bundles_roverz.root","RECREATE")
         with open( output_dir + "/" + filename + ".npy", "wb") as filep:
             pickle.dump(bundles, filep)

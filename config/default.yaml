@@ -44,6 +44,7 @@ study_mapping:
     include_max_towers_in_chi2: True
     max_modules_weighting_factor: 30000
     max_towers_weighting_option: 2 #option 1 uses max directly, option 2 uses it within a step-like function
+    max_towers_step_point: 180 #The value of max_towers above which the chi2 increases quickly when using option 2
     max_towers_weighting_factor: 30000
     weight_bins_proportionally: True #divide the chi2 in each r/z bin by the bin content 
 
