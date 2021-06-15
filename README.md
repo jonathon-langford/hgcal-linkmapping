@@ -46,7 +46,7 @@ where `i` is a number which is attached to the output configuration on completio
 
 There are seven possible functions in `main.py` and these are run by setting the relevant function to `True` in `config/default.py`. The most important function is `study_mapping`. This needs to be `True` in order to perform the minimisation and find the optimised way of assigning lpGBTs to FPGAs (also known as bundles). The other functions are described at the end of this README.
 
-The additional configurable parameters for the `study_mapping` function are in the `study_mapping` block of the config file.
+The additional configurable parameters for the `study_mapping` function are either in the `study_mapping` block of the config file or in a global block (in the case of the `corrections` and `fpgas` blocks).
 
 `MappingFile` gives the input location for the file listing each module and which lpGBTs are connected to each. `CMSSW_ModuleHists` gives the input location for the set of 2D histograms that were created in the first step of `extract_data.cxx`. `TowerMappingFile` gives the location of the file listing each module and which towers overlap with each. This is used if `include_max_towers_in_chi2` is set to `True` below.
 
@@ -65,6 +65,8 @@ For the towers, there is an additional option `max_towers_weighting_option` whic
 Finally there is an option `weight_bins_proportionally` which divides the &Chi;<sup>2</sup> in each r/z bin by the bin value (multiplied by a constant).
 
 The configurable information in `phisplit` details how to split the 2D r/z histograms in phi, so as to define the phidivisionX and phidivisionY regions. The default is `per_rover_bin`, which means the mid-point in phi in each r/z bin is used as the division. The other option is `fixed`, which means the split is at a fixed point in `phi` (the values of which are defined using the `phidivisionX_fixvalue_min` and `phidivisionX_fixvalue_max` variables.
+
+The `fpgas` block has two configurable parameters. The first `nBundles` is the number of stage 1 FPGAs (or bundles) covering an 120 degree sector. The second `maxInputs` is not actually used in the evaluation of the bundle configuarations, but an error message will be displayed if the number of FPGA lpGBT inputs exceeds this value.
 
 Finally any corrections to account for differences between the geometry in the input `ROOT` histograms and the latest geometry are given in the `corrections` block. If using `v11` geometry these should generally be left unchanged.
 

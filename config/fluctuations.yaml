@@ -86,7 +86,13 @@ checkFluctuations:
   outputName: alldata_neutrino_gun
   mappingFile: data/FeMappingTpgV7.txt
   save_ntc_hists: False
-  
+
+  fpgas:
+    #Number of stage 1 FPGAs covering a sector
+    nBundles: 24
+    #Maximum number of lpGBT inputs to each FPGA
+    maxInputs: 72
+
   tcPtConfig:
     #Set 'save_sum_tcPt' to be True if you want to save the sum of TC_pt, with different truncation options
     save_sum_tcPt: False

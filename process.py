@@ -629,13 +629,13 @@ def find_nearest(array, values):
         
     return indices
 
-def getBundles(minigroups_swap,combination):
+def getBundles(minigroups_swap,combination,nBundles=24,maxInputs=72):
     #Reimplemented in externals/mlrose_mod/opt_probs.py
     
-    #Need to divide the minigroups into 24 groups taking into account their different size
-    nBundles = 24
+    #Need to divide the minigroups into nBundles groups (24 by default) taking into account their different size
+
     #The weights are the numbers of lpgbts in each mini-groups
-    weights = np.array([ len(minigroups_swap[x])  for x in combination ])
+    weights = np.array([ len(minigroups_swap[x]) for x in combination ])
     cumulative_arr = weights.cumsum() / weights.sum()
     #Calculate the indices where to perform the split
 
@@ -648,8 +648,8 @@ def getBundles(minigroups_swap,combination):
 
     for bundle in bundles:
         weight_bundles = np.array([ len(minigroups_swap[x])  for x in bundle ])
-        if (weight_bundles.sum() > 72 ):
-            print ( "Error: more than 72 lpgbts in bundle")
+        if (weight_bundles.sum() > maxInputs ):
+            print ( "Error: more than " + str(maxInputs) + " lpgbts in bundle")
             
     return bundles
             
@@ -723,7 +723,7 @@ def getMaximumNumberOfModulesInABundle(minigroups_modules,bundles):
     maximum = max(getNumberOfModulesInEachBundle( minigroups_modules,bundles ))
     return maximum
 
-def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=1000,max_towers=None,weight_max_towers=[1000,1],weight_proportionally=True):
+def calculateChiSquared(inclusive,grouped,nBundles=24,max_modules=None,weight_max_modules=1000,max_towers=None,weight_max_towers=[1000,1],weight_proportionally=True):
 
     use_error_squares = False
     #Check if the minigroup_hists were produced
@@ -755,7 +755,7 @@ def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=10
             for b in range(len(hist)):
 
                 if not use_error_squares:
-                    squared_diff = np.power(hist[b]-inclusive[i].GetBinContent(b+1)/24, 2 )
+                    squared_diff = np.power(hist[b]-inclusive[i].GetBinContent(b+1)/nBundles, 2 )
                     chi2_total+=squared_diff
                 else:
                     weight_p = 1.0
@@ -763,12 +763,12 @@ def calculateChiSquared(inclusive,grouped,max_modules=None,weight_max_modules=10
                         if hist[b][0] > 0:
                             weight_p = hist[b][0]/500.
 
-                    squared_diff = np.power(hist[b][0]-inclusive[i].GetBinContent(b+1)/24, 2 ) / weight_p
+                    squared_diff = np.power(hist[b][0]-inclusive[i].GetBinContent(b+1)/nBundles, 2 ) / weight_p
 
                     squared_error = hist[b][1]
 
                     if ( squared_error == 0 ):
-                        squared_error = inclusive[i].GetBinError(b+1)/24
+                        squared_error = inclusive[i].GetBinError(b+1)/nBundles
                     
                     if ( squared_error != 0 ):
                         chi2_total+=(squared_diff/squared_error)
