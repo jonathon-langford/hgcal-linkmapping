@@ -580,19 +580,19 @@ def main():
     
     if (config['function']['plot_MeanMax']):
         subconfig = config['plot_MeanMax']
-        plotMeanMax(eventData = subconfig['eventData'], outdir = config['output_dir'], xyTreatment = subconfig['xyTreatment'], binningConfig = binningConfig, plotIndividualEvents = subconfig['plotIndividualEvents'])
+        plotMeanMax(eventData = config['eventData'], outdir = config['output_dir'], xyTreatment = subconfig['xyTreatment'], binningConfig = binningConfig, plotIndividualEvents = subconfig['plotIndividualEvents'])
 
     if (config['function']['plot_Truncation']):
         subconfig = config['plot_Truncation']
-        plotTruncation(eventData = subconfig['eventData'],outdir = config['output_dir'], useMaximumXY = subconfig['useMaximumXY'], binningConfig = binningConfig )
+        plotTruncation(eventData = config['eventData'],outdir = config['output_dir'], useMaximumXY = subconfig['useMaximumXY'], binningConfig = binningConfig )
         
     if (config['function']['studyTruncationOptions']):
         subconfig = config['studyTruncationOptions']
-        studyTruncationOptions(eventData = subconfig['eventData'], options_to_study = subconfig['options_to_study'], truncation_values_method = subconfig['truncation_values_method'], truncationConfig = config['truncationConfig'], binningConfig = binningConfig, outdir = config['output_dir'] )
+        studyTruncationOptions(eventData = config['eventData'], options_to_study = subconfig['options_to_study'], truncation_values_method = subconfig['truncation_values_method'], truncationConfig = config['truncationConfig'], binningConfig = binningConfig, outdir = config['output_dir'] )
         
     if (config['function']['plot_Truncation_tc_Pt']):
         subconfig = config['plot_Truncation_tc_Pt']
-        plot_Truncation_tc_Pt(eventData = subconfig['eventData'], options_to_study = subconfig['options_to_study'], truncationConfig = config['truncationConfig'], binningConfig = binningConfig, outdir = config['output_dir'] )
+        plot_Truncation_tc_Pt(eventData = subconfig['eventData_Pt'], options_to_study = subconfig['options_to_study'], truncationConfig = config['truncationConfig'], binningConfig = binningConfig, outdir = config['output_dir'] )
 
     
 main()

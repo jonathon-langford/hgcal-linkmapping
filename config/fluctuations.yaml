@@ -8,6 +8,8 @@ function:
 print_level: 0
 output_dir: .
 
+eventData: data/alldata_neutrino_gun_2006022.txt
+  
 corrections:
   ldmToHdmModuleCorrectionFile: 'data/different_moduleType_HDMInMappingFile_linkMapping.txt'
   ldmToHdmCorrectionType: 'FixedOcc'
@@ -110,19 +112,17 @@ checkFluctuations:
     phidivisionY_fixvalue_max: 55 #degrees
   
 plot_MeanMax:
-  eventData: data/alldata_neutrino_gun_2006022.txt
+
   xyTreatment: maximum #treatment of X and Y divisions. Option of 'separate', 'maximum', or 'inclusive'
   plotIndividualEvents: False
   
 plot_Truncation:
-  eventData: data/alldata_neutrino_gun_2006022.txt
   useMaximumXY: True
 
 studyTruncationOptions:
-  eventData: data/alldata_neutrino_gun_2006022.txt
   options_to_study: [1,2,3] #Available options: [1,2,3,4,5]
   truncation_values_method: reverse #Available options: original, reverse
   
 plot_Truncation_tc_Pt:
-  eventData: data/alldata_ttbar_200813_sumpt.txt
+  eventData_Pt: data/alldata_ttbar_200813_sumpt.txt
   options_to_study: [1,2,3]    #Should correspond to the same options in the input file. Available options: [1,2,3,4,5]

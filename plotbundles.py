@@ -175,7 +175,6 @@ def main():
         lpgbt_hists = getlpGBTHists(data, module_hists)
         minigroup_hists_root = getMiniGroupHists(lpgbt_hists,minigroups_swap,root=True)
         bundles = getBundles(minigroups_swap,init_state,nBundles,maxInputs)
-        print ("HERE", nBundles, len(bundles))
         bundled_hists = getBundledlpgbtHistsRoot(minigroup_hists_root,bundles)
         minigroups_modules = getMiniModuleGroups(data,minigroups_swap)
         nmodules = getNumberOfModulesInEachBundle(minigroups_modules,bundles)
