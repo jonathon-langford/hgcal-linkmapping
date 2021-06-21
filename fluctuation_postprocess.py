@@ -13,7 +13,29 @@ import time
 import yaml
 import sys, os
 
-def plotMeanMax(eventData, outdir = ".", useMaximumXY = True, binningConfig = None, plotIndividualEvents = False):
+def plotMeanMax(eventData, outdir = ".", xyTreatment = "maximum", binningConfig = None, plotIndividualEvents = False):
+
+    #Load pickled per-event bundle histograms
+    phidivisionX_bundled_lpgbthists_allevents,phidivisionY_bundled_lpgbthists_allevents = loadFluctuationData(eventData)
+
+    #Plotting Max, mean and standard deviation per bundle:
+
+    #For each r/z bin take either the sum of the phidivisionX and phidivisionY arrays (inclusive) or the maximum of the two
+    if ( xyTreatment == 'maximum' ):
+        bundled_lpgbthists_allevents = np.maximum(phidivisionX_bundled_lpgbthists_allevents,phidivisionY_bundled_lpgbthists_allevents)
+        plotMeanMax_MakePlots(bundled_lpgbthists_allevents, binningConfig = binningConfig,
+                              savename = "_xy_maximum", outdir = outdir, plotIndividualEvents = plotIndividualEvents)
+    elif ( xyTreatment == 'inclusive' ):
+        bundled_lpgbthists_allevents = phidivisionX_bundled_lpgbthists_allevents + phidivisionY_bundled_lpgbthists_allevents
+        plotMeanMax_MakePlots(bundled_lpgbthists_allevents, binningConfig = binningConfig,
+                              savename = "_xy_inclusive", outdir = outdir, plotIndividualEvents = plotIndividualEvents)
+    elif ( xyTreatment == 'separate' ):
+        plotMeanMax_MakePlots(phidivisionX_bundled_lpgbthists_allevents, binningConfig = binningConfig,
+                              savename = "_phiDivisionX", outdir = outdir, plotIndividualEvents = plotIndividualEvents)
+        plotMeanMax_MakePlots(phidivisionY_bundled_lpgbthists_allevents, binningConfig = binningConfig,
+                              savename = "_phiDivisionY", outdir = outdir, plotIndividualEvents = plotIndividualEvents)
+
+def plotMeanMax_MakePlots(bundled_lpgbthists_allevents, binningConfig = None, outdir = ".", savename = "", plotIndividualEvents = False):
 
     if ( binningConfig != None ):        
         rOverZMin = binningConfig["rOverZMin"]
@@ -23,27 +45,15 @@ def plotMeanMax(eventData, outdir = ".", useMaximumXY = True, binningConfig = No
         rOverZMin = 0.07587128
         rOverZMax = 0.55563514
 
-    #Load pickled per-event bundle histograms
-    phidivisionX_bundled_lpgbthists_allevents,phidivisionY_bundled_lpgbthists_allevents = loadFluctuationData(eventData)
-
-    os.system("mkdir -p " + outdir)
-
-    nROverZBins = len(phidivisionX_bundled_lpgbthists_allevents[0][0]) #42 by default
+    nROverZBins = len(bundled_lpgbthists_allevents[0][0]) #42 by default
+    nBundles = len(bundled_lpgbthists_allevents[0]) #24 by default
     
     #To get binning for r/z histograms
     inclusive_hists = np.histogram( np.empty(0), bins = nROverZBins, range = (rOverZMin,rOverZMax) )
 
-    hists_max = [] 
+    os.system("mkdir -p " + outdir)
     
-    #Plotting Max, mean and standard deviation per bundle:
-
-    #For each r/z bin take either the sum of the phidivisionX and phidivisionY arrays (inclusive) or the maximum of the two
-    if ( useMaximumXY ):
-        bundled_lpgbthists_allevents = np.maximum(phidivisionX_bundled_lpgbthists_allevents,phidivisionY_bundled_lpgbthists_allevents)
-    else:
-        bundled_lpgbthists_allevents = phidivisionX_bundled_lpgbthists_allevents + phidivisionY_bundled_lpgbthists_allevents
-
-    nBundles = len(bundled_lpgbthists_allevents[0]) #24 by default
+    hists_max = [] 
     
     for bundle in range(nBundles):
         bundle_list = bundled_lpgbthists_allevents[:,bundle,:]
@@ -66,7 +76,7 @@ def plotMeanMax(eventData, outdir = ".", useMaximumXY = True, binningConfig = No
                 pl.bar((inclusive_hists[1])[:-1], event, width=0.012,fill=False)
                 
         pl.ylim((0,71))
-        pl.savefig( outdir + "/bundle_" + str(bundle) + "max.png" )        
+        pl.savefig( outdir + "/bundle_" + str(bundle) + "max" + savename + ".png" )        
         pl.clf()
 
         hists_max.append(hist_max)
@@ -77,7 +87,7 @@ def plotMeanMax(eventData, outdir = ".", useMaximumXY = True, binningConfig = No
     pl.ylim((0,71))
     pl.xlabel('r/z')
     pl.ylabel('Maximum number of TCs per bin')
-    pl.savefig( outdir + "/maxima.png" )
+    pl.savefig( outdir + "/maxima" + savename + ".png" )
     pl.clf()
 
 def sumMaximumOverAllEventsAndBundles(truncation,data):
@@ -574,7 +584,7 @@ def plotTruncation(eventData, outdir = ".", useMaximumXY = True, binningConfig =
 
     #For a given r/z bin calculate the mean over all events
     #and add 2.5x the average of the nBundles (24 by default) bundles' RMS
-    best_likely = np.mean(inclusive_bundled_lpgbthists_allevents,axis=(0,1))+2.5*np.mean(np.std(inclusive_bundled_lpgbthists_allevents,axis=(0)),axis=0)
+    best_likely = np.mean(bundled_lpgbthists_allevents,axis=(0,1))+2.5*np.mean(np.std(bundled_lpgbthists_allevents,axis=(0)),axis=0)
     ratio_to_best = np.divide(overall_max99p,best_likely,out=np.zeros_like(overall_max99p),where=best_likely!=0)
     
     print ("Maximum TC in any bundle in any event (per bin) = ", np.round(np.amax(max_per_event_perbin,axis=0)))

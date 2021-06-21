@@ -580,7 +580,7 @@ def main():
     
     if (config['function']['plot_MeanMax']):
         subconfig = config['plot_MeanMax']
-        plotMeanMax(eventData = subconfig['eventData'], outdir = config['output_dir'], useMaximumXY = subconfig['useMaximumXY'], binningConfig = binningConfig, plotIndividualEvents = subconfig['plotIndividualEvents'])
+        plotMeanMax(eventData = subconfig['eventData'], outdir = config['output_dir'], xyTreatment = subconfig['xyTreatment'], binningConfig = binningConfig, plotIndividualEvents = subconfig['plotIndividualEvents'])
 
     if (config['function']['plot_Truncation']):
         subconfig = config['plot_Truncation']

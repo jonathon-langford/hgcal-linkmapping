@@ -111,7 +111,7 @@ checkFluctuations:
   
 plot_MeanMax:
   eventData: data/alldata_neutrino_gun_2006022.txt
-  useMaximumXY: True
+  xyTreatment: maximum #treatment of X and Y divisions. Option of 'separate', 'maximum', or 'inclusive'
   plotIndividualEvents: False
   
 plot_Truncation:
