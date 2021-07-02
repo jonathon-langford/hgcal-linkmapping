@@ -46,7 +46,7 @@ where `i` is a number which is attached to the output configuration on completio
 
 There are seven possible functions in `main.py` and these are run by setting the relevant function to `True` in `config/default.py`. The most important function is `study_mapping`. This needs to be `True` in order to perform the minimisation and find the optimised way of assigning lpGBTs to FPGAs (also known as bundles). The other functions are described at the end of this README.
 
-The additional configurable parameters for the `study_mapping` function are in the `study_mapping` block of the config file.
+The additional configurable parameters for the `study_mapping` function are either in the `study_mapping` block of the config file or in a global block (in the case of the `corrections` and `fpgas` blocks).
 
 `MappingFile` gives the input location for the file listing each module and which lpGBTs are connected to each. `CMSSW_ModuleHists` gives the input location for the set of 2D histograms that were created in the first step of `extract_data.cxx`. `TowerMappingFile` gives the location of the file listing each module and which towers overlap with each. This is used if `include_max_towers_in_chi2` is set to `True` below.
 
@@ -65,6 +65,8 @@ For the towers, there is an additional option `max_towers_weighting_option` whic
 Finally there is an option `weight_bins_proportionally` which divides the &Chi;<sup>2</sup> in each r/z bin by the bin value (multiplied by a constant).
 
 The configurable information in `phisplit` details how to split the 2D r/z histograms in phi, so as to define the phidivisionX and phidivisionY regions. The default is `per_rover_bin`, which means the mid-point in phi in each r/z bin is used as the division. The other option is `fixed`, which means the split is at a fixed point in `phi` (the values of which are defined using the `phidivisionX_fixvalue_min` and `phidivisionX_fixvalue_max` variables.
+
+The `fpgas` block has two configurable parameters. The first `nBundles` is the number of stage 1 FPGAs (or bundles) covering an 120 degree sector. The second `maxInputs` is not actually used in the evaluation of the bundle configuarations, but an error message will be displayed if the number of FPGA lpGBT inputs exceeds this value.
 
 Finally any corrections to account for differences between the geometry in the input `ROOT` histograms and the latest geometry are given in the `corrections` block. If using `v11` geometry these should generally be left unchanged.
 
@@ -109,7 +111,7 @@ It is run in the same manner as before, ensuring `studyTruncationOptions` is set
 - `./fluctuation.py config/fluctuations.yaml`
 
 The relevant parameters are:
--  `eventData`, which is the output filled r/z histograms from the previous step
+-  the global pararameter `eventData`, which is the output filled r/z histograms from the previous step
 -  `options_to_study`, the numbers of the different scenarios under investigation. These numbers correspond to the option number in the `truncationConfig` described previously.
 -  `truncation_values_method` - the two possibilities are `original` and `reverse`. The original method calculates the 99th percentile of TCs in each r/z bin and finds a scaling factor to apply to this to ensure that the sum of TCs is less than the maximum allowed. There is then a small redistribution of TCs. The reverse method aims to maintain a constant fraction of TCs truncated across r/z, and finds the highest possible fraction such that the sum of TCs is less than the maximum allowed. There is again a small redistribution of TCs.
 
@@ -119,7 +121,7 @@ Once the truncation values have been found, one can use these as the `predetermi
 
 When running with `studyTruncationOptions` set to `True` two types of plots will be produced:
 -  The first is a 2D histogram for each region A and B, showing the number of trigger cells versus r/z. This is filled once for each bunch crossing (x6 rotational symmetry) and for each bundle. 1D curves corresponding to the truncation values found for each option are printed on top.
--  The second is a 1D line chart showing as a function of r/z the number of trigger cells after truncation in a bin divided by the total number in that bin (one line for each of regions A and B). One plot is produced for each option being studied. If the option `plot_Truncation_tc_Pt` is `True` then a similar plot is also produced showing the sum of TC p<sub>T</sub> after truncation in a bin divided by the total TC p<sub>T</sub> in that bin. Note if this option is `True` then the `eventData` input in the `plot_Truncation_tc_Pt` block also needs to be set. This `eventData` was produced when running `checkFluctuations` with `save_sum_tcPt` set to `True`.
+-  The second is a 1D line chart showing as a function of r/z the number of trigger cells after truncation in a bin divided by the total number in that bin (one line for each of regions A and B). One plot is produced for each option being studied. If the option `plot_Truncation_tc_Pt` is `True` then a similar plot is also produced showing the sum of TC p<sub>T</sub> after truncation in a bin divided by the total TC p<sub>T</sub> in that bin. Note if this option is `True` then the `eventData_Pt` input in the `plot_Truncation_tc_Pt` block also needs to be set. This `eventData_Pt` was produced when running `checkFluctuations` with `save_sum_tcPt` set to `True`.
 
 ## Further additional useful functions
 
@@ -134,5 +136,5 @@ In `fluctuation_postprocess.py`
 
 - `plot_Truncation`: If this is set to true in `config/fluctuations.yaml` then a study is performed looking at the effect of applying 1%, 5% and 10% truncation of trigger cells. The function assumes that there are two equally-sized regions (i.e. phiDivisionX and phiDivisionY) with the same maximum TCs.
 
-- `plot_MeanMax`: If this is set to true in `config/fluctuations.yaml` then a histogram is produced for each bundle (24 in total) showing the maximum number of TCs seen over all events in each r/z bin as well as the mean, and the mean plus the standard deviation. There is also a summary plot produced showing the maximum number of TCs as a function of r/z for each bundle plotted on top of one other. There are two optional arguments. Firstly if `useMaximumXY` is `True` (which it is by default) then for each r/z bin in each event the maximum number of TCs out of the phidivisionX and phidivisionY regions is taken. Otherwise the sum of the r/z bins in the two regions is taken. Secondly if `plotIndividualEvents` is set to `True` then for bundle 0 the r/z values for each event are plotted on the same histogram.
+- `plot_MeanMax`: If this is set to true in `config/fluctuations.yaml` then a histogram is produced for each bundle (24 in total) showing the maximum number of TCs seen over all events in each r/z bin as well as the mean, and the mean plus the standard deviation. There is also a summary plot produced showing the maximum number of TCs as a function of r/z for each bundle plotted on top of one other. There are two optional arguments. Firstly, `xyTreatment`, which has three possible settings: `maximum` (which it is by default) where for each r/z bin in each event the maximum number of TCs out of the phidivisionX and phidivisionY regions is taken. This can also be `inclusive` where the sum of the r/z bins in the two regions is taken or separate where the phidivisionX and phidivisionY regions are treated separately. Secondly if `plotIndividualEvents` is set to `True` then for bundle 0 the r/z values for each event are plotted on the same histogram.
 

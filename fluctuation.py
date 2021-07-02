@@ -250,7 +250,7 @@ def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata,truncation_values, TCratio
     return alldata
 
 
-def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="alldata", tcPtConfig=None, correctionConfig=None, phisplitConfig=None, truncationConfig = None, binningConfig = None, save_ntc_hists=False, beginEvent = -1, endEvent = -1):
+def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="alldata", fpgaConfig = None, tcPtConfig=None, correctionConfig=None, phisplitConfig=None, truncationConfig = None, binningConfig = None, save_ntc_hists=False, beginEvent = -1, endEvent = -1):
 
     if ( binningConfig != None ):        
         nROverZBins = binningConfig["nROverZBins"]
@@ -261,7 +261,15 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
         nROverZBins = 42
         rOverZMin = 0.076
         rOverZMax = 0.58
-        
+
+    if ( fpgaConfig != None ):
+        nBundles = fpgaConfig["nBundles"]
+        maxInputs = fpgaConfig["maxInputs"]
+    else:
+        #Set defaults
+        nBundles = 24
+        maxInputs = 72
+
     #To get binning for r/z histograms
     inclusive_hists = np.histogram( np.empty(0), bins = nROverZBins, range = (rOverZMin,rOverZMax) )
     roverzBinning = inclusive_hists[1]
@@ -306,7 +314,7 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
 
     #Get list of which modules are in each minigroup
     minigroups_modules = getMiniModuleGroups(data,minigroups_swap)
-    bundles = getBundles(minigroups_swap,init_state)
+    bundles = getBundles(minigroups_swap,init_state,nBundles,maxInputs)
 
     bundled_lpgbthists_allevents = []
     bundled_pt_hists_allevents = []
@@ -427,7 +435,7 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
                     roverz_bin = np.argmax( roverzBinning > abs(roverz_phi[0]) )
 
                     if (roverz_phi[1] >= phi_split_phidivisionX[roverz_bin-1]):
-                        #There should be no r/z values lower than 0.076
+                        #There should be no r/z values lower than rOverZMin (around 0.076)
                         ROverZ_per_module_phidivisionX[np.sign(z),sector][0,uv[0],uv[1],layer] = np.append(ROverZ_per_module_phidivisionX[np.sign(z),sector][0,uv[0],uv[1],layer],abs(roverz_phi[0]))
                         if save_sum_tcPt:
                             ROverZ_per_module_phidivisionX_tcPt[np.sign(z),sector][0,uv[0],uv[1],layer].append( [abs(roverz_phi[0]),pt] )
@@ -562,25 +570,29 @@ def main():
         if 'tcPtConfig' in subconfig.keys():
             tcPtConfig = subconfig['tcPtConfig']
 
-        checkFluctuations(initial_state=subconfig['initial_state'], cmsswNtuple=subconfig['cmsswNtuple'], mappingFile=subconfig['mappingFile'], outputName=subconfig['outputName'], tcPtConfig = tcPtConfig, correctionConfig = correctionConfig, phisplitConfig = subconfig['phisplit'], truncationConfig = truncationConfig, binningConfig = binningConfig, save_ntc_hists=subconfig['save_ntc_hists'],beginEvent = subconfig['beginEvent'], endEvent = subconfig['endEvent'])
+        fpgaConfig = None
+        if 'fpgas' in subconfig.keys():
+            fpgaConfig = subconfig['fpgas']
+
+        checkFluctuations(initial_state=subconfig['initial_state'], cmsswNtuple=subconfig['cmsswNtuple'], mappingFile=subconfig['mappingFile'], outputName=subconfig['outputName'], fpgaConfig = fpgaConfig, tcPtConfig = tcPtConfig, correctionConfig = correctionConfig, phisplitConfig = subconfig['phisplit'], truncationConfig = truncationConfig, binningConfig = binningConfig, save_ntc_hists=subconfig['save_ntc_hists'], beginEvent = subconfig['beginEvent'], endEvent = subconfig['endEvent'])
 
     #Plotting functions
     
     if (config['function']['plot_MeanMax']):
         subconfig = config['plot_MeanMax']
-        plotMeanMax(eventData = subconfig['eventData'], outdir = config['output_dir'], useMaximumXY = subconfig['useMaximumXY'], binningConfig = binningConfig, plotIndividualEvents = subconfig['plotIndividualEvents'])
+        plotMeanMax(eventData = config['eventData'], outdir = config['output_dir'], xyTreatment = subconfig['xyTreatment'], binningConfig = binningConfig, plotIndividualEvents = subconfig['plotIndividualEvents'])
 
     if (config['function']['plot_Truncation']):
         subconfig = config['plot_Truncation']
-        plotTruncation(eventData = subconfig['eventData'],outdir = config['output_dir'], useMaximumXY = subconfig['useMaximumXY'], binningConfig = binningConfig )
+        plotTruncation(eventData = config['eventData'],outdir = config['output_dir'], useMaximumXY = subconfig['useMaximumXY'], binningConfig = binningConfig )
         
     if (config['function']['studyTruncationOptions']):
         subconfig = config['studyTruncationOptions']
-        studyTruncationOptions(eventData = subconfig['eventData'], options_to_study = subconfig['options_to_study'], truncation_values_method = subconfig['truncation_values_method'], truncationConfig = config['truncationConfig'], binningConfig = binningConfig, outdir = config['output_dir'] )
+        studyTruncationOptions(eventData = config['eventData'], options_to_study = subconfig['options_to_study'], truncation_values_method = subconfig['truncation_values_method'], truncationConfig = config['truncationConfig'], binningConfig = binningConfig, outdir = config['output_dir'] )
         
     if (config['function']['plot_Truncation_tc_Pt']):
         subconfig = config['plot_Truncation_tc_Pt']
-        plot_Truncation_tc_Pt(eventData = subconfig['eventData'], options_to_study = subconfig['options_to_study'], truncationConfig = config['truncationConfig'], binningConfig = binningConfig, outdir = config['output_dir'] )
+        plot_Truncation_tc_Pt(eventData = subconfig['eventData_Pt'], options_to_study = subconfig['options_to_study'], truncationConfig = config['truncationConfig'], binningConfig = binningConfig, outdir = config['output_dir'] )
 
     
 main()

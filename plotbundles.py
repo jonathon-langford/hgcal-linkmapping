@@ -28,7 +28,8 @@ def print_numpy_plot(hists,outdir,plotname):
     for bundle in numpy_hists:
         pl.step(inclusive_hists[1], np.append(bundle,bundle[-1]), where = 'post' )
 
-    pl.ylim((0,1100000))
+    nBundles = len(numpy_hists)
+    pl.ylim((0,1100000*24/nBundles))
     pl.savefig( outdir + "/" + plotname + ".png" )
     pl.clf()
     
@@ -52,7 +53,8 @@ def print_ratio_plot(inclusive,individual,ratio,outdir,plotname):
     inclusive.Draw("HIST")
     #inclusive.Draw("E1")
     ROOT.gStyle.SetOptStat(0)
-    inclusive.SetMaximum(1100E3)
+    nBundles = len(individual)
+    inclusive.SetMaximum(1100E3*24/nBundles)
     inclusive.GetYaxis().SetTitleOffset(1.9);
     inclusive.GetYaxis().SetTitleFont(43);
     inclusive.GetYaxis().SetLabelFont(43);
@@ -89,7 +91,7 @@ def main():
 
     useROOT = False
     useConfiguration = False
-    filein = ROOT.TFile("lpgbt_10.root")
+    filein = ROOT.TFile("bundles_roverz.root")
     
     inclusive_hists = []
     phidivisionX_hists = []
@@ -134,10 +136,20 @@ def main():
         TowerPhiSplit = config['npy_configuration']['TowerPhiSplit']
         CMSSW_ModuleHists = config['npy_configuration']['CMSSW_ModuleHists']
 
+        #Load FPGA Information
+        if 'fpgas' in config.keys():
+            fpgaConfig = config['fpgas']
+            nBundles = fpgaConfig["nBundles"]
+            maxInputs = fpgaConfig["maxInputs"]
+        else:
+            #Set defaults
+            nBundles = 24
+            maxInputs = 72
+
         phisplitConfig = None
         if 'phisplit' in config['npy_configuration'].keys():
             phisplitConfig = config['npy_configuration']['phisplit']
-
+            
         data = loadDataFile(MappingFile) #dataframe
         towerdata = loadModuleTowerMappingFile(TowerMappingFile)
         minigroups,minigroups_swap = getMinilpGBTGroups(data)
@@ -153,7 +165,7 @@ def main():
                 phidivisionX_fixvalue_min = phisplitConfig['phidivisionX_fixvalue_min']
             if 'phidivisionY_fixvalue_max' in phisplitConfig.keys():
                 phidivisionY_fixvalue_max = phisplitConfig['phidivisionY_fixvalue_max']
-
+        
         inclusive_hists_input,module_hists = getModuleHists(CMSSW_ModuleHists, split = split, phidivisionX_fixvalue_min = phidivisionX_fixvalue_min, phidivisionY_fixvalue_max = phidivisionY_fixvalue_max)
         if 'corrections' in config.keys():
             if config['corrections'] != None:
@@ -162,7 +174,7 @@ def main():
 
         lpgbt_hists = getlpGBTHists(data, module_hists)
         minigroup_hists_root = getMiniGroupHists(lpgbt_hists,minigroups_swap,root=True)
-        bundles = getBundles(minigroups_swap,init_state)
+        bundles = getBundles(minigroups_swap,init_state,nBundles,maxInputs)
         bundled_hists = getBundledlpgbtHistsRoot(minigroup_hists_root,bundles)
         minigroups_modules = getMiniModuleGroups(data,minigroups_swap)
         nmodules = getNumberOfModulesInEachBundle(minigroups_modules,bundles)
@@ -182,9 +194,9 @@ def main():
         phidivisionX = inclusive_hists_input[0].Clone("inclusive_hists_input_phidivisionX")
         phidivisionY = inclusive_hists_input[1]
 
-        inclusive.Scale(1./24)
-        phidivisionX.Scale(1./24)
-        phidivisionY.Scale(1./24)
+        inclusive.Scale(1./nBundles)
+        phidivisionX.Scale(1./nBundles)
+        phidivisionY.Scale(1./nBundles)
 
         for i,(hist_phidivisionX,hist_phidivisionY) in enumerate(zip(bundled_hists[0].values(),bundled_hists[1].values())):
 
@@ -221,7 +233,7 @@ def main():
         phidivisionY = filein.Get("ROverZ_PhiDivisionY")
         ROOT.TH1.Add(phidivisionX,phidivisionY)
 
-        for i in range (24):
+        for i in range (nBundles):
             phidivisionX_hists.append( filein.Get("lpgbt_ROverZ_bundled_"+str(i)+"_0") )
             phidivisionY_hists.append( filein.Get("lpgbt_ROverZ_bundled_"+str(i)+"_1") )
             inclusive_hists.append( phidivisionX_hists[-1].Clone("inclusive_hists_input_phidivisionX" + str(i)) )

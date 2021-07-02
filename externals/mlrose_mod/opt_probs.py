@@ -246,8 +246,8 @@ class DiscreteOpt(OptProb):
         (max_val - 1), inclusive.
     """
 
-    def __init__(self, length, fitness_fn, maximize=True, max_val=2, minigroups=None):
-
+    def __init__(self, length, fitness_fn, maximize=True, max_val=2, minigroups=None, nBundles=24):
+        
         OptProb.__init__(self, length, fitness_fn, maximize)
 
         if self.fitness_fn.get_prob_type() == 'continuous':
@@ -274,6 +274,7 @@ class DiscreteOpt(OptProb):
         self.prob_type = 'discrete'
         self.mimic_speed = False
         self.minigroups = minigroups
+        self.nBundles = nBundles
 
     def eval_node_probs(self):
         """Update probability density estimates.
@@ -508,8 +509,8 @@ class DiscreteOpt(OptProb):
     def getBundles(self,combination):
 
         minigroups = self.minigroups
-        nBundles = 24
-        weights = np.array([ len(minigroups[x])  for x in combination ])
+        nBundles = self.nBundles
+        weights = np.array([ len(minigroups[x]) for x in combination ])
         cumulative_arr = weights.cumsum() / weights.sum()
         idx = np.searchsorted(cumulative_arr, np.linspace(0, 1, nBundles, endpoint=False)[1:])
 

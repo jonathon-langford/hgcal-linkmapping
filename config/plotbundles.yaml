@@ -16,6 +16,12 @@ npy_configuration:
     phidivisionX_fixvalue_min: 30 #degrees
     phidivisionY_fixvalue_max: 90 #degrees
 
+fpgas:
+  #Number of stage 1 FPGAs covering a sector
+  nBundles: 24
+  #Maximum number of lpGBT inputs to each FPGA
+  maxInputs: 72
+
 corrections:
   ldmToHdmModuleCorrectionFile: 'data/different_moduleType_HDMInMappingFile_linkMapping.txt'
   ldmToHdmCorrectionType : 'FixedOcc'
