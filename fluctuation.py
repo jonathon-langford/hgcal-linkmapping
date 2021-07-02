@@ -435,7 +435,7 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
                     roverz_bin = np.argmax( roverzBinning > abs(roverz_phi[0]) )
 
                     if (roverz_phi[1] >= phi_split_phidivisionX[roverz_bin-1]):
-                        #There should be no r/z values lower than 0.076
+                        #There should be no r/z values lower than rOverZMin (around 0.076)
                         ROverZ_per_module_phidivisionX[np.sign(z),sector][0,uv[0],uv[1],layer] = np.append(ROverZ_per_module_phidivisionX[np.sign(z),sector][0,uv[0],uv[1],layer],abs(roverz_phi[0]))
                         if save_sum_tcPt:
                             ROverZ_per_module_phidivisionX_tcPt[np.sign(z),sector][0,uv[0],uv[1],layer].append( [abs(roverz_phi[0]),pt] )
