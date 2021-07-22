@@ -639,7 +639,11 @@ def getBundles(minigroups_swap,combination,nBundles=24,maxInputs=72):
     #Need to divide the minigroups into nBundles groups (24 by default) taking into account their different size
 
     #The weights are the numbers of lpgbts in each mini-groups
-    weights = np.array([ len(minigroups_swap[x]) for x in combination ])
+    try:
+        weights = np.array([ len(minigroups_swap[x]) for x in combination ])
+    except KeyError:
+        print ("Requested minigroup does not exist in input mapping file")
+        exit()
     cumulative_arr = weights.cumsum() / weights.sum()
     #Calculate the indices where to perform the split
 
