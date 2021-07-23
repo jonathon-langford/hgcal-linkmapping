@@ -1,4 +1,4 @@
-input_file: data/bundles_example-pickle-tpgv7.npy
+input_file: data/bundles_example-pickle-tpgv7-14fpgas.npy
 output_dir: plots
 
 npy_configuration:
@@ -18,9 +18,9 @@ npy_configuration:
 
 fpgas:
   #Number of stage 1 FPGAs covering a sector
-  nBundles: 24
+  nBundles: 14
   #Maximum number of lpGBT inputs to each FPGA
-  maxInputs: 72
+  maxInputs: 120
 
 corrections:
   ldmToHdmModuleCorrectionFile: 'data/different_moduleType_HDMInMappingFile_linkMapping.txt'

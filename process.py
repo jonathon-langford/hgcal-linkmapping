@@ -286,7 +286,9 @@ def getlpGBTLoadInfo(data,data_tcs_passing,data_tcs_passing_scin):
     lpgbt_loads_words=[]
     layers=[]
 
-    for lpgbt in range(0,1600) :
+    maxLpGBTNumber = data[['TPGId1','TPGId2']].max().max()
+    
+    for lpgbt in range(0,maxLpGBTNumber+1):
 
         tc_load = 0.
         word_load = 0.
@@ -442,8 +444,10 @@ def getlpGBTHists(data, module_hists):
         nROverZBins = example_hist.GetNbinsX()
         rOverZMin = example_hist.GetXaxis().GetBinLowEdge(1)
         rOverZMax = example_hist.GetXaxis().GetBinLowEdge(nROverZBins + 1)
+
+        maxLpGBTNumber = data[['TPGId1','TPGId2']].max().max()
         
-        for lpgbt in range(0,1600) :
+        for lpgbt in range(0,maxLpGBTNumber+1):
             lpgbt_found = False
 
             lpgbt_hist = ROOT.TH1D( ("lpgbt_ROverZ_silicon_" + str(lpgbt) + "_" + str(p)),"",nROverZBins,rOverZMin,rOverZMax)
@@ -635,7 +639,11 @@ def getBundles(minigroups_swap,combination,nBundles=24,maxInputs=72):
     #Need to divide the minigroups into nBundles groups (24 by default) taking into account their different size
 
     #The weights are the numbers of lpgbts in each mini-groups
-    weights = np.array([ len(minigroups_swap[x]) for x in combination ])
+    try:
+        weights = np.array([ len(minigroups_swap[x]) for x in combination ])
+    except KeyError:
+        print ("Requested minigroup does not exist in input mapping file")
+        exit()
     cumulative_arr = weights.cumsum() / weights.sum()
     #Calculate the indices where to perform the split
 
