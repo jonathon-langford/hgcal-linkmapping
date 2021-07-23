@@ -91,9 +91,9 @@ checkFluctuations:
 
   fpgas:
     #Number of stage 1 FPGAs covering a sector
-    nBundles: 24
+    nBundles: 14
     #Maximum number of lpGBT inputs to each FPGA
-    maxInputs: 72
+    maxInputs: 120
 
   tcPtConfig:
     #Set 'save_sum_tcPt' to be True if you want to save the sum of TC_pt, with different truncation options
