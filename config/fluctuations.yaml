@@ -10,11 +10,6 @@ output_dir: .
 
 eventData: data/alldata_neutrino_gun_2006022.txt
   
-corrections:
-  ldmToHdmModuleCorrectionFile: 'data/different_moduleType_HDMInMappingFile_linkMapping.txt'
-  ldmToHdmCorrectionType: 'FixedOcc'
-  nTCCorrectionFile: 'data/different_nTCs_linkMapping.txt'
-
 binningConfig:
   nROverZBins: 42
   rOverZMin: 0.07587128
@@ -86,14 +81,7 @@ checkFluctuations:
   initial_state: data/bundles_example-pickle-tpgv7.npy
   cmsswNtuple: data/small_v11_relval_ttbar_200611.root
   outputName: alldata_neutrino_gun
-  mappingFile: data/FeMappingTpgV7.txt
   save_ntc_hists: False
-
-  fpgas:
-    #Number of stage 1 FPGAs covering a sector
-    nBundles: 14
-    #Maximum number of lpGBT inputs to each FPGA
-    maxInputs: 120
 
   tcPtConfig:
     #Set 'save_sum_tcPt' to be True if you want to save the sum of TC_pt, with different truncation options
@@ -101,13 +89,13 @@ checkFluctuations:
     options_to_study: [1,2,3]
     
   phisplit:
-    #How to split in phi, if 'per_roverz_bin' need to provide a root splitfile
+    #How to split in phi, if 'per_roverz_bin' the RoverZ histogram file
+    #used to produce the mapping is used to determine the split.
     #If 'fixed' need to provide split values in degrees,
     #i.e. fixed point in phi at which the split should occur: 'phidivisionX_fixvalue_min' and #phidivisionY_fixvalue_max'
     #'per_roverz_bin', 'fixed'
     type: per_roverz_bin
     
-    splitfile: data/ROverZHistograms_v11_relval_ttbar_20210518.root
     phidivisionX_fixvalue_min: 55 #degrees
     phidivisionY_fixvalue_max: 55 #degrees
   

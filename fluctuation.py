@@ -9,7 +9,7 @@ from matplotlib.colors import LogNorm
 import math
 import pickle
 from scipy import optimize
-from process import loadDataFile
+from process import loadDataFile,loadConfiguration
 from process import getPhiSplitIndices
 from process import getMinilpGBTGroups,getBundles,getBundledlpgbtHists,getMiniModuleGroups
 from rotate import rotate_to_sector_0
@@ -250,7 +250,7 @@ def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata,truncation_values, TCratio
     return alldata
 
 
-def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="alldata", fpgaConfig = None, tcPtConfig=None, correctionConfig=None, phisplitConfig=None, truncationConfig = None, binningConfig = None, save_ntc_hists=False, beginEvent = -1, endEvent = -1):
+def checkFluctuations(initial_state, cmsswNtuple, outputName="alldata", tcPtConfig=None, truncationConfig = None, binningConfig = None, save_ntc_hists=False, beginEvent = -1, endEvent = -1):
 
     if ( binningConfig != None ):        
         nROverZBins = binningConfig["nROverZBins"]
@@ -259,24 +259,24 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
     else:
         #Set defaults
         nROverZBins = 42
-        rOverZMin = 0.076
-        rOverZMax = 0.58
-
-    if ( fpgaConfig != None ):
-        nBundles = fpgaConfig["nBundles"]
-        maxInputs = fpgaConfig["maxInputs"]
-    else:
-        #Set defaults
-        nBundles = 24
-        maxInputs = 72
+        rOverZMin = 0.07587128
+        rOverZMax = 0.55563514
 
     #To get binning for r/z histograms
     inclusive_hists = np.histogram( np.empty(0), bins = nROverZBins, range = (rOverZMin,rOverZMax) )
     roverzBinning = inclusive_hists[1]
-    
-    #List of which minigroups are assigned to each bundle 
-    init_state = np.hstack(np.load(initial_state,allow_pickle=True))
 
+    #Load allocation information
+    info = loadConfiguration(initial_state)
+    data = info['data']
+    init_state = info['mapping']
+    nBundles = info['nBundles']
+    maxInputs = info['maxInputs']
+    mappingFile = info['configuration']['MappingFile']
+    phisplitConfig = info['phisplitConfig']
+    correctionConfig = info['correctionConfig']
+    CMSSW_ModuleHists = info['CMSSW_ModuleHists']
+    
     #Load the truncation options, if need to truncate based on E_T when running over ntuple (save_sum_tcPt == True)
     truncation_options = []
     ABratios = []
@@ -295,9 +295,6 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
     #Load the CMSSW ntuple to get per event and per trigger cell information
     rootfile = ROOT.TFile.Open( cmsswNtuple , "READ" )
     tree = rootfile.Get("HGCalTriggerNtuple")
-
-    #Load mapping file
-    data = loadDataFile(mappingFile) 
 
     max_ieta = 2 #Definition of a scintillator module is different between V7 and TpgV7 mapping files 
     if "FeMappingV7" in mappingFile:
@@ -335,8 +332,8 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
             phi_split_phidivisionX = np.full( nROverZBins, np.radians(phisplitConfig['phidivisionX_fixvalue_min']) )
             phi_split_phidivisionY = np.full( nROverZBins, np.radians(phisplitConfig['phidivisionY_fixvalue_max']) )
         else:
-            file_roverz_inclusive = ROOT.TFile(str(phisplitConfig['splitfile']),"READ")
-            PhiVsROverZ_Total = file_roverz_inclusive.Get("ROverZ_Inclusive" )
+            file_roverz_inclusive = ROOT.TFile(CMSSW_ModuleHists,"READ")
+            PhiVsROverZ_Total = file_roverz_inclusive.Get("ROverZ_Inclusive")
             split_indices_phidivisionX = getPhiSplitIndices( PhiVsROverZ_Total, split = "per_roverz_bin")
             split_indices_phidivisionY = getPhiSplitIndices( PhiVsROverZ_Total, split = "per_roverz_bin")
             phi_split_phidivisionX = np.zeros( nROverZBins )
@@ -561,20 +558,13 @@ def main():
         binningConfig = config['binningConfig']
 
     if (config['function']['checkFluctuations']):
-        correctionConfig = None
-        if 'corrections' in config.keys():
-            correctionConfig = config['corrections']
-        tcPtConfig = None
-
         subconfig = config['checkFluctuations']
+        
+        tcPtConfig = None
         if 'tcPtConfig' in subconfig.keys():
             tcPtConfig = subconfig['tcPtConfig']
 
-        fpgaConfig = None
-        if 'fpgas' in subconfig.keys():
-            fpgaConfig = subconfig['fpgas']
-
-        checkFluctuations(initial_state=subconfig['initial_state'], cmsswNtuple=subconfig['cmsswNtuple'], mappingFile=subconfig['mappingFile'], outputName=subconfig['outputName'], fpgaConfig = fpgaConfig, tcPtConfig = tcPtConfig, correctionConfig = correctionConfig, phisplitConfig = subconfig['phisplit'], truncationConfig = truncationConfig, binningConfig = binningConfig, save_ntc_hists=subconfig['save_ntc_hists'], beginEvent = subconfig['beginEvent'], endEvent = subconfig['endEvent'])
+        checkFluctuations(initial_state=subconfig['initial_state'], cmsswNtuple=subconfig['cmsswNtuple'], outputName=subconfig['outputName'], tcPtConfig = tcPtConfig, truncationConfig = truncationConfig, binningConfig = binningConfig, save_ntc_hists=subconfig['save_ntc_hists'], beginEvent = subconfig['beginEvent'], endEvent = subconfig['endEvent'])
 
     #Plotting functions
     

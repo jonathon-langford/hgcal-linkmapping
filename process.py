@@ -11,6 +11,8 @@ import sys
 from root_numpy import hist2array
 import ctypes
 import re
+import pickle
+import os
 
 np.set_printoptions(threshold=sys.maxsize)
 pd.set_option('display.max_rows', None)
@@ -68,6 +70,70 @@ def loadModuleTowerMappingFile(MappingFile):
                 module_towermap[0, int(modulesplit[1]), int(modulesplit[2]) , int(modulesplit[3])] = module_towers
 
     return module_towermap
+
+def loadConfiguration(config):
+
+    infodict = {}
+    
+    #Load input information
+    with open(config, "rb") as filep:
+        info = pickle.load(filep)
+
+    #List of which minigroups are assigned to each bundle 
+    infodict['mapping'] = np.hstack(info[0])
+
+    #Other configurables
+    infodict['configuration'] = info[1]
+    infodict['random_seed'] = info[2]
+    infodict['nCallsToMappingMax'] = info[3]
+    infodict['max_modules'] = info[4]
+    infodict['max_towers_list'] = info[5]
+    infodict['git'] = info[6]
+
+    if 'fpgas' in infodict['configuration'].keys():
+        fpgaConfig = infodict['configuration']['fpgas']
+        infodict['nBundles'] = fpgaConfig["nBundles"]
+        infodict['maxInputs'] = fpgaConfig["maxInputs"]
+    else:
+        #Set defaults
+        print ("Warning: FPGA configuration not found in input, "
+        "default FPGAs being used which may not correspond "
+        "to those used when producing the mapping")
+        infodict['nBundles'] = 14
+        infodict['maxInputs'] = 120
+
+    if 'phisplit' in infodict['configuration'].keys():
+        infodict['phisplitConfig'] = infodict['configuration']['phisplit']
+    else:
+        #Set defaults
+        print ("Warning: phi-split configuration not found in input, "
+        "default configuration being used")
+        infodict['phisplitConfig'] = None
+
+    if 'corrections' in infodict['configuration'].keys():
+        infodict['correctionConfig'] = infodict['configuration']['corrections']
+    else:
+        #Set defaults
+        print ("Warning: correction configuration not found in input, "
+        "default configuration being used")
+        infodict['correctionConfig'] = None
+
+    #Load mapping file
+    MappingFile = infodict['configuration']['MappingFile']
+    if os.path.isfile(MappingFile):
+        data = loadDataFile(MappingFile)
+    else:
+        print ("Warning: input data file not found, "
+        "Therefore using a default data file which may not correspond "
+        "to that used when producing the mapping")
+        MappingFile = "data/FeMappingTpgV7.txt"
+        data = loadDataFile(MappingFile)
+
+    infodict['data'] = data
+    infodict['minigroup_type'] = infodict['configuration']['minigroup_type']
+    infodict['CMSSW_ModuleHists'] = infodict['configuration']['CMSSW_ModuleHists']
+    
+    return infodict
 
 #Legacy function to read ROverZHistograms file with 1D histograms
 def getModuleHists1D(HistFile):
@@ -551,6 +617,20 @@ def getTowerBundles(minigroups_towers, bundles, phisplit=None):
         all_bundles_towers.append(bundle_towers_phi_split)
         
     return all_bundles_towers
+
+def getMaxTowersList(minigroups_towers, bundles, phisplit=None):
+
+    #Return a list of the maximum number of towers seen over all bundles in the phi regions defined by phisplit
+    #phisplit is a list indicating the bin numbers in phi where a split must be made
+    bundled_towers = getTowerBundles(minigroups_towers, bundles, TowerPhiSplit)
+
+    max_towers_list = []
+    n_phi_split = len(bundled_towers[0])
+    for i in range (n_phi_split):
+        bundled_towers_phi = [x[i] for x in bundled_towers]
+        max_towers_list.append(len(max(bundled_towers_phi,key=len)))#Get the length of bundle with the greatest number of towers in each phi_split region
+
+    return max_towers_list    
 
 def getMinilpGBTGroups(data, minigroup_type="minimal"):
 

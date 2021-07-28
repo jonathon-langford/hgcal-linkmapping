@@ -1,28 +1,2 @@
 input_file: data/bundles_example-pickle-tpgv7-14fpgas.npy
 output_dir: plots
-
-npy_configuration:
-  mappingFile: data/FeMappingTpgV7.txt
-  towerMappingFile: data/tower_per_module-20210517-Silic8-Scint16.txt
-  TowerPhiSplit: [6,15]
-  CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_ttbar_20210518.root
-  phisplit:
-    #How to split in phi, either 'per_roverz_bin' (midpoint splits taken from CMSSW_ModuleHists file) or 'fixed'
-    #If 'fixed' need to provide split values in degrees,
-    #i.e. fixed point in phi at which the split should occur: 'phidivisionX_fixvalue_min' and #phidivisionY_fixvalue_max'
-    #'per_roverz_bin', 'fixed'
-    type: per_roverz_bin
-    #type: fixed
-    phidivisionX_fixvalue_min: 30 #degrees
-    phidivisionY_fixvalue_max: 90 #degrees
-
-fpgas:
-  #Number of stage 1 FPGAs covering a sector
-  nBundles: 14
-  #Maximum number of lpGBT inputs to each FPGA
-  maxInputs: 120
-
-corrections:
-  ldmToHdmModuleCorrectionFile: 'data/different_moduleType_HDMInMappingFile_linkMapping.txt'
-  ldmToHdmCorrectionType : 'FixedOcc'
-  nTCCorrectionFile: 'data/different_nTCs_linkMapping.txt'

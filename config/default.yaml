@@ -10,12 +10,6 @@ function:
 print_level: 0
 output_dir: .
 
-fpgas:
-  #Number of stage 1 FPGAs covering a sector
-  nBundles: 14
-  #Maximum number of lpGBT inputs to each FPGA
-  maxInputs: 120
-
 study_mapping:
   MappingFile: data/FeMappingTpgV7.txt
   CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_ttbar_20210518.root
@@ -31,7 +25,9 @@ study_mapping:
   initial_state: random
 
   random_seed: ~
-  max_iterations: 200000 
+  max_iterations: 200000
+  #Set max_calls if you know the exact number of calls needed to reproduce a certain mapping configuration
+  max_calls: ~
 
   #Definition of a minigroup:
   #'bylayer_silicon_seprated', 'bylayer', 'minimal'
@@ -57,10 +53,14 @@ study_mapping:
     phidivisionX_fixvalue_min: 55 #degrees
     phidivisionY_fixvalue_max: 55 #degrees
 
-corrections:
-  ldmToHdmModuleCorrectionFile: 'data/different_moduleType_HDMInMappingFile_linkMapping.txt'
-  ldmToHdmCorrectionType : 'FixedOcc'
-  nTCCorrectionFile: 'data/different_nTCs_linkMapping.txt'
+  corrections:
+    nTCCorrectionFile: 'data/different_nTCs_linkMapping.txt'
+  
+  fpgas:
+    #Number of stage 1 FPGAs covering a sector
+    nBundles: 14
+    #Maximum number of lpGBT inputs to each FPGA
+    maxInputs: 120
 
 check_for_missing_modules:
   inCMSSW: True
@@ -84,19 +84,14 @@ plot_ModuleLoads:
   CMSSW_Scintillator: "data/average_tcs/average_tcs_scin_v11_relval_ttbar_20200611.csv"
 
 produce_AllocationFile:
-  MappingFile: data/FeMappingTpgV7.txt
   allocation: data/bundles_example-pickle-tpgv7-14fpgas.npy
   file_name: 'allocation.txt'
-  minigroup_type: 'minimal'
 
 produce_nTCsPerModuleHists:
-  MappingFile: data/FeMappingTpgV7.txt
   allocation: data/bundles_example-pickle-tpgv7-14fpgas.npy
-  minigroup_type: 'minimal'
   CMSSW_ModuleHists: data/nTCs_v11_relval_ttbar_20200814.root
 
 produce_JsonMappingFile:
-  MappingFile: data/FeMappingTpgV7.txt
   allocation: data/bundles_example-pickle-tpgv7-14fpgas.npy
-  minigroup_type: 'minimal'
+  output_name: hgcal_trigger_link_mapping.json
   # disconnected_modules: data/test_triggergeom.root #optional root file listing disconnected modules
