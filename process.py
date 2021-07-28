@@ -622,7 +622,7 @@ def getMaxTowersList(minigroups_towers, bundles, phisplit=None):
 
     #Return a list of the maximum number of towers seen over all bundles in the phi regions defined by phisplit
     #phisplit is a list indicating the bin numbers in phi where a split must be made
-    bundled_towers = getTowerBundles(minigroups_towers, bundles, TowerPhiSplit)
+    bundled_towers = getTowerBundles(minigroups_towers, bundles, phisplit)
 
     max_towers_list = []
     n_phi_split = len(bundled_towers[0])

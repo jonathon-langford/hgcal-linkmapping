@@ -130,7 +130,7 @@ def main():
     if useConfiguration:
 
         #Load allocation information
-        info = loadConfiguration(allocation)
+        info = loadConfiguration(filein_str)
         data = info['data']
         init_state = info['mapping']
         minigroup_type = info['minigroup_type']
@@ -138,9 +138,9 @@ def main():
         maxInputs = info['maxInputs']
         phisplitConfig = info['phisplitConfig']
         correctionConfig = info['correctionConfig']
-        CMSSW_ModuleHist = info['CMSSW_ModuleHists']
+        CMSSW_ModuleHists = info['CMSSW_ModuleHists']
         max_modules = info['max_modules']
-        max_towers = info['max_towers_list']
+        max_towers_list = info['max_towers_list']
         
         output_dir = config['output_dir']
             
@@ -168,9 +168,9 @@ def main():
         bundles = getBundles(minigroups_swap,init_state,nBundles,maxInputs)
         bundled_hists = getBundledlpgbtHistsRoot(minigroup_hists_root,bundles)
 
-        if info['configuration']['include_max_modules_in_chi2']:
+        if info['configuration']['chi2']['include_max_modules_in_chi2']:
             print ("max modules = ", max_modules)
-        if info['configuration']['include_max_towers_in_chi2']:
+        if info['configuration']['chi2']['include_max_towers_in_chi2']:
             print ("max towers in each phi region = ", max_towers_list)
         
         inclusive = inclusive_hists_input[0].Clone("inclusive_hists_input_inclusive")
