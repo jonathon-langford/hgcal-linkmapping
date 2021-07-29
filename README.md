@@ -48,7 +48,7 @@ There are seven possible functions in `main.py` and these are run by setting the
 
 The additional configurable parameters for the `study_mapping` function are in the `study_mapping` block of the config file.
 
-`MappingFile` gives the input location for the file listing each module and which lpGBTs are connected to each. `CMSSW_ModuleHists` gives the input location for the set of 2D histograms that were created in the first step of `extract_data.cxx`. `TowerMappingFile` gives the location of the file listing each module and which towers overlap with each. This is used if `include_max_towers_in_chi2` is set to `True` below.
+`MappingFile` gives the input location for the file listing each module and which lpGBTs are connected to each. `CMSSW_ModuleHists` gives the input location for the set of 2D histograms that were created in the first step of `extract_data.cxx`. `cmsswNtuple` is not needed to run the minimisation, but provides origin information of the input 2D histograms. `TowerMappingFile` gives the location of the file listing each module and which towers overlap with each. This is used if `include_max_towers_in_chi2` is set to `True` below.
 
 The minimisation is either performed using a random hill climb or simulated annealing algorithm. The choice is set under `algorithm`. Note that there is also an option `save_root`, which directly saves the r/z histograms for each bundle to a `ROOT` file (for the `initial_state` configuration). This option is not often used.
 

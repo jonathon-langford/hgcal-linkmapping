@@ -20,7 +20,7 @@ from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.metrics import accuracy_score
 from _ctypes import PyObj_FromPtr
 
-from process import getModuleHists, getlpGBTHists, getMiniGroupHists, getMinilpGBTGroups, getMiniModuleGroups, getBundles, getBundledlpgbtHists, getBundledlpgbtHistsRoot, calculateChiSquared, getMaximumNumberOfModulesInABundle
+from process import getModuleHists, getCMSSWNtupleName, getlpGBTHists, getMiniGroupHists, getMinilpGBTGroups, getMiniModuleGroups, getBundles, getBundledlpgbtHists, getBundledlpgbtHistsRoot, calculateChiSquared, getMaximumNumberOfModulesInABundle
 from process import loadDataFile, loadModuleTowerMappingFile, loadConfiguration, getTCsPassing, getlpGBTLoadInfo, getHexModuleLoadInfo, getModuleTCHists, getMiniTowerGroups, getMaxTowersList
 from plotting import plot, plot2D
 
@@ -154,6 +154,7 @@ def produce_JsonMappingFile(allocation,output_name="hgcal_trigger_link_mapping.j
     random_seed = info['random_seed']
     nCallsToMappingMax = info['nCallsToMappingMax']
     max_modules = info['max_modules']
+    cmsswNtuple = info['cmsswNtuple']
     max_towers_phi_region = max(info['max_towers'])
     git = info['git']
 
@@ -316,6 +317,7 @@ def produce_JsonMappingFile(allocation,output_name="hgcal_trigger_link_mapping.j
     config_output["hgcal-linkmapping-ncalls"] = nCallsToMappingMax
     config_output["hgcal-linkmapping-maxmodules"] = max_modules
     config_output["hgcal-linkmapping-maxtowersphiregion"] = max_towers
+    config_output["hgcal-linkmapping-cmsswntuple"] = cmsswNtuple
     config_output["hgcal-linkmapping-gitrevision"] = git
     
     json_main['Config'] = config_output            
@@ -432,7 +434,8 @@ def study_mapping(Configuration):
     correctionConfig = None
     chi2Config=None
     phisplitConfig = None
-
+    cmsswNtuple = ""
+    
     if 'fpgas' in subconfig.keys():
         fpgaConfig = subconfig['fpgas']
     if 'corrections' in subconfig.keys():
@@ -469,6 +472,7 @@ def study_mapping(Configuration):
                 phidivisionY_fixvalue_max = phisplitConfig['phidivisionY_fixvalue_max']
 
         inclusive_hists,module_hists = getModuleHists(CMSSW_ModuleHists, split = split, phidivisionX_fixvalue_min = phidivisionX_fixvalue_min, phidivisionY_fixvalue_max = phidivisionY_fixvalue_max)
+        cmsswNtuple = getCMSSWNtupleName(CMSSW_ModuleHists)
 
     except EnvironmentError:
         print ( "File " + CMSSW_ModuleHists + " does not exist" )
@@ -663,7 +667,7 @@ def study_mapping(Configuration):
             else:
                 max_towers_list = 'Not used in chi2'
             with open( output_dir + "/" + filename + ".npy", "wb") as filep:
-                result_config_git = [bundles,subconfig,random_seed,nCallsToMappingMax,max_modules,max_towers_list,git]
+                result_config_git = [bundles,subconfig,random_seed,nCallsToMappingMax,max_modules,max_towers_list,cmsswNtuple,git]
                 pickle.dump(result_config_git, filep)
             file1 = open(output_dir + "/chi2_"+filenumber+".txt","a")
             file1.write( "bundles[" + filenumber + "] = " + str(chi2_min) + "\n" )

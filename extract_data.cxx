@@ -548,6 +548,10 @@ int main(int argc, char **argv){
       x.second->Write();
     }
     out_ntcs_per_event->Write();
+
+    //Save name of input ntuple
+    file_out->WriteObject( &input_file, "input_CMSSW_ntuple"  );
+
     file_out->Close();
 
     //Create output csv

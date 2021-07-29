@@ -17,7 +17,7 @@ import os
 np.set_printoptions(threshold=sys.maxsize)
 pd.set_option('display.max_rows', None)
 
-infiles = []
+infiles = {}
 
 def loadDataFile(MappingFile):
 
@@ -88,7 +88,8 @@ def loadConfiguration(config):
     infodict['nCallsToMappingMax'] = info[3]
     infodict['max_modules'] = info[4]
     infodict['max_towers_list'] = info[5]
-    infodict['git'] = info[6]
+    infodict['cmsswNtuple'] = info[6]
+    infodict['git'] = info[7]
 
     if 'fpgas' in infodict['configuration'].keys():
         fpgaConfig = infodict['configuration']['fpgas']
@@ -140,13 +141,14 @@ def getModuleHists1D(HistFile):
 
     module_hists = []
     inclusive_hists = []
-    
-    infiles.append(ROOT.TFile.Open(HistFile,"READ"))
+
+    if not HistFile in infiles:
+        infiles[HistFile] = ROOT.TFile.Open(HistFile,"READ")
 
     inclusive = {}
     phi60 = {}
 
-    list_of_hists = [hist.GetName() for hist in infiles[-1].GetListOfKeys()]
+    list_of_hists = [hist.GetName() for hist in infiles[HistFile].GetListOfKeys()]
 
     for hist in list_of_hists:
         if "Inclusive" in hist or "ROverZ" not in hist:
@@ -156,17 +158,17 @@ def getModuleHists1D(HistFile):
         
         if "silicon" in hist:
             if "Phi60" in hist:
-                phi60[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+                phi60[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[HistFile].Get(hist)
             else:
-                inclusive[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+                inclusive[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[HistFile].Get(hist)
         elif "scintillator" in hist:
             if "Phi60" in hist:
-                phi60[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+                phi60[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[HistFile].Get(hist)
             else:
-                inclusive[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+                inclusive[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[HistFile].Get(hist)
 
-    inclusive_hists.append(infiles[-1].Get("ROverZ_Inclusive" ))
-    inclusive_hists.append(infiles[-1].Get("ROverZ_Inclusive_Phi60" ))
+    inclusive_hists.append(infiles[HistFile].Get("ROverZ_Inclusive" ))
+    inclusive_hists.append(infiles[HistFile].Get("ROverZ_Inclusive_Phi60" ))
                 
     module_hists.append(inclusive)
     module_hists.append(phi60)
@@ -177,9 +179,11 @@ def getModuleHists1D(HistFile):
 def getModuleTCHists(HistFile):
 
     module_hists = {}
-    
-    infiles.append(ROOT.TFile.Open(HistFile,"READ"))
-    list_of_hists = [hist.GetName() for hist in infiles[-1].GetListOfKeys()]
+
+    if not HistFile in infiles:
+        infiles[HistFile] = ROOT.TFile.Open(HistFile,"READ")
+
+    list_of_hists = [hist.GetName() for hist in infiles[HistFile].GetListOfKeys()]
     
     for hist in list_of_hists:
         if "nTCs" not in hist:
@@ -188,9 +192,9 @@ def getModuleTCHists(HistFile):
         ijk = hist.split("_")
 
         if "silicon" in hist:
-            module_hists[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+            module_hists[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[HistFile].Get(hist)
         elif "scintillator" in hist:
-            module_hists[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+            module_hists[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[HistFile].Get(hist)
 
     return module_hists
 
@@ -235,13 +239,14 @@ def getModuleHists(HistFile, split = "fixed", phidivisionX_fixvalue_min = 55, ph
     
     module_hists = []
     inclusive_hists = []
-    
-    infiles.append(ROOT.TFile.Open(HistFile,"READ"))
 
-    if not infiles[-1]:
+    if not HistFile in infiles:
+        infiles[HistFile] = ROOT.TFile.Open(HistFile,"READ")
+
+    if not infiles[HistFile]:
         raise EnvironmentError
-    
-    PhiVsROverZ = infiles[-1].Get("ROverZ_Inclusive" )
+
+    PhiVsROverZ = infiles[HistFile].Get("ROverZ_Inclusive" )
 
     nBinsPhi = PhiVsROverZ.GetNbinsY()    
 
@@ -271,14 +276,14 @@ def getModuleHists(HistFile, split = "fixed", phidivisionX_fixvalue_min = 55, ph
     phiDivisionX = {}
     phiDivisionY = {}
 
-    list_of_hists = [hist.GetName() for hist in infiles[-1].GetListOfKeys()]
+    list_of_hists = [hist.GetName() for hist in infiles[HistFile].GetListOfKeys()]
 
     for hist in list_of_hists:
         if "Inclusive" in hist or "ROverZ" not in hist:
             continue
 
         ijk = hist.split("_") #To get u (ieta), v (iphi), and layer
-        PhiVsROverZ = infiles[-1].Get(hist)
+        PhiVsROverZ = infiles[HistFile].Get(hist)
         nBinsPhi = PhiVsROverZ.GetNbinsY()        
 
         if "silicon" in hist:                            
@@ -344,6 +349,23 @@ def getHistsPerLayer(module_hists):
     f.Close()
         
     return histsPerLayer
+
+def getCMSSWNtupleName(HistFile):
+    #Small function to get name of the CMSSW TPG ntuple used to
+    #produce the HistFile containing histograms of TCs versus r/z
+    infiles.append(ROOT.TFile.Open(HistFile,"READ"))
+
+    if not HistFile in infiles:
+        infiles[HistFile] = ROOT.TFile.Open(HistFile,"READ")
+
+    if not infiles[HistFile]:
+        raise EnvironmentError
+
+    name = ""
+    if "input_CMSSW_ntuple" in infiles[HistFile].GetListOfKeys():
+        name = infiles[HistFile].Get("input_CMSSW_ntuple")
+
+    return name
 
 def getlpGBTLoadInfo(data,data_tcs_passing,data_tcs_passing_scin):
     #Loop over all lpgbts
