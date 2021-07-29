@@ -353,8 +353,6 @@ def getHistsPerLayer(module_hists):
 def getCMSSWNtupleName(HistFile):
     #Small function to get name of the CMSSW TPG ntuple used to
     #produce the HistFile containing histograms of TCs versus r/z
-    infiles.append(ROOT.TFile.Open(HistFile,"READ"))
-
     if not HistFile in infiles:
         infiles[HistFile] = ROOT.TFile.Open(HistFile,"READ")
 
