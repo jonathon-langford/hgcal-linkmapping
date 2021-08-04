@@ -36,6 +36,9 @@ class exitProgramSignal(LookupError):
 def handler(signum, frame):
     raise exitProgramSignal()    
 
+def dummy_handler(signum, frame):
+    pass
+
 def plot_lpGBTLoads(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
 
     #Load external data
@@ -657,6 +660,7 @@ def study_mapping(Configuration):
             print("interrupt received, stopping and saving")
 
         finally:
+            signal.signal(signal.SIGUSR1,dummy_handler) # avoid any interrupt when finalising
             bundles = getBundles(minigroups_swap,combbest,nBundles,maxInputs)
             if include_max_modules_in_chi2:
                 max_modules = getMaximumNumberOfModulesInABundle(minigroups_modules,bundles)
