@@ -4,7 +4,6 @@ sys.path.insert(1, './externals')
 import ROOT
 import numpy as np
 import mlrose_mod as mlrose # Author: Genevieve Hayes https://github.com/gkhayes/mlrose/tree/master/mlrose
-import time
 import yaml
 import signal
 import pickle
@@ -12,7 +11,6 @@ import json
 import re
 import subprocess
 import random
-import os
 
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split

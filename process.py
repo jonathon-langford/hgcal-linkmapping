@@ -1,16 +1,9 @@
 #!/usr/bin/env python3
 import pandas as pd
 import numpy as np
-from rotate import rotate_to_sector_0
-import matplotlib.pyplot as plt
 import ROOT
-import time
-import itertools
-import random
 import sys
-from root_numpy import hist2array
 import ctypes
-import re
 import pickle
 import os
 
@@ -363,7 +356,7 @@ def getCMSSWNtupleName(HistFile):
     if "input_CMSSW_ntuple" in infiles[HistFile].GetListOfKeys():
         name = infiles[HistFile].Get("input_CMSSW_ntuple")
 
-    return name
+    return str(name)
 
 def getlpGBTLoadInfo(data,data_tcs_passing,data_tcs_passing_scin):
     #Loop over all lpgbts
