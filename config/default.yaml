@@ -21,7 +21,7 @@ study_mapping:
   algorithm: random_hill_climb
 
   #initial state configuation:
-  #'random', 'data/bundles_example-pickle-tpgv7-14fpgas.npy'
+  #'random', 'data/mapping_example_tpgv7_14fpgas_120links.npy'
   initial_state: random
 
   random_seed: ~
@@ -84,7 +84,7 @@ plot_ModuleLoads:
   CMSSW_Scintillator: "data/average_tcs/average_tcs_scin_v11_relval_ttbar_20200611.csv"
 
 produce_AllocationFile:
-  allocation: data/bundles_example-pickle-tpgv7-14fpgas.npy
+  allocation: data/mapping_example_tpgv7_14fpgas_120links.npy
   file_name: 'allocation.txt'
 
 produce_nTCsPerModuleHists:

@@ -78,7 +78,7 @@ truncationConfig:
 checkFluctuations:  
   beginEvent: -1
   endEvent: -1
-  initial_state: data/bundles_example-pickle-tpgv7.npy
+  initial_state: data/mapping_example_tpgv7_14fpgas_120links.npy
   cmsswNtuple: data/small_v11_relval_ttbar_200611.root
   outputName: alldata_neutrino_gun
   save_ntc_hists: False

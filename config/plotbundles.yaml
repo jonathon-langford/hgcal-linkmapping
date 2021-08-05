@@ -1,2 +1,2 @@
-input_file: data/bundles_example-pickle-tpgv7-14fpgas.npy
+input_file: data/mapping_example_tpgv7_14fpgas_120links.npy
 output_dir: plots
