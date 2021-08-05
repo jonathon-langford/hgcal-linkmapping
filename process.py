@@ -17,8 +17,12 @@ def loadDataFile(MappingFile):
     column_names=['layer', 'u', 'v', 'density', 'shape', 'nDAQ', 'nTPG','DAQId1','nDAQeLinks1','DAQId2','nDAQeLinks2','TPGId1','nTPGeLinks1','TPGId2','nTPGeLinks2']
 
     #Read in data file
-    data = pd.read_csv(MappingFile,delim_whitespace=True,names=column_names)
-
+    try:
+        data = pd.read_csv(MappingFile,delim_whitespace=True,names=column_names)
+    except:    
+        print ("mapping file " + MappingFile + " not found")
+        exit()
+        
     #For a given module you need to know the total number of e-links
     data['TPGeLinkSum'] = data[['nTPGeLinks1','nTPGeLinks2']].sum(axis=1).where( data['nTPG'] == 2 , data['nTPGeLinks1'])
 
@@ -31,8 +35,16 @@ def getTCsPassing(CMSSW_Silicon,CMSSW_Scintillator):
 
     #Set number of TCs by hand for now (In reality this number is taken per event from CMSSW)
     column_names=[ 'u', 'v', 'layer', 'nTCs', 'nWords' ]
-    data = pd.read_csv(CMSSW_Silicon,names=column_names)
-    data_scin = pd.read_csv(CMSSW_Scintillator,names=column_names)
+    try:
+        data = pd.read_csv(CMSSW_Silicon,names=column_names)
+    except:
+        print ("file " + CMSSW_Silicon + " not found")
+        exit()
+    try:
+        data_scin = pd.read_csv(CMSSW_Scintillator,names=column_names)
+    except:
+        print ("file " + CMSSW_Scintillator + " not found")
+        exit()
 
     return data,data_scin
 

@@ -37,7 +37,13 @@ def handler(signum, frame):
 def dummy_handler(signum, frame):
     pass
 
-def plot_lpGBTLoads(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
+def plot_lpGBTLoads(Configuration):
+
+    subconfig = Configuration['plot_lpGBTLoads']
+    output_dir = Configuration['output_dir']
+    MappingFile = subconfig['MappingFile']
+    CMSSW_Silicon = subconfig['CMSSW_Silicon']
+    CMSSW_Scintillator = subconfig['CMSSW_Scintillator']
 
     #Load external data
     data = loadDataFile(MappingFile) #dataframe    
@@ -45,23 +51,26 @@ def plot_lpGBTLoads(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
     
     lpgbt_loads_tcs,lpgbt_loads_words,lpgbt_layers = getlpGBTLoadInfo(data,data_tcs_passing,data_tcs_passing_scin)
 
-    plot(lpgbt_loads_tcs,"loads_tcs.png",binwidth=0.1,xtitle='Number of TCs on a single lpGBT')
-    plot(lpgbt_loads_words,"loads_words.png",binwidth=0.1,xtitle='Number of words on a single lpGBT')
-    plot2D(lpgbt_loads_tcs,lpgbt_layers,"tcs_vs_layer.png",xtitle='Number of TCs on a single lpGBT')
-    plot2D(lpgbt_loads_words,lpgbt_layers,"words_vs_layer.png",xtitle='Number of words on a single lpGBT')
+    plot(lpgbt_loads_tcs,"loads_tcs.png",binwidth=0.1,xtitle='Number of TCs on a single lpGBT',outdir=output_dir)
+    plot(lpgbt_loads_words,"loads_words.png",binwidth=0.1,xtitle='Number of words on a single lpGBT',outdir=output_dir)
+    plot2D(lpgbt_loads_tcs,lpgbt_layers,"tcs_vs_layer.png",xtitle='Number of TCs on a single lpGBT',outdir=output_dir)
+    plot2D(lpgbt_loads_words,lpgbt_layers,"words_vs_layer.png",xtitle='Number of words on a single lpGBT',outdir=output_dir)
 
-def plot_ModuleLoads(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
+def plot_ModuleLoads(Configuration):
+
+    subconfig = Configuration['plot_ModuleLoads']
+    output_dir = Configuration['output_dir']
+    MappingFile = subconfig['MappingFile']
+    CMSSW_Silicon = subconfig['CMSSW_Silicon']
+    CMSSW_Scintillator = subconfig['CMSSW_Scintillator']
 
     #Load external data
     data = loadDataFile(MappingFile) #dataframe    
-    data_tcs_passing,data_tcs_passing_scin = getTCsPassing(CMSSW_Silicon,CMSSW_Scintillator) #from CMSSW
-    
-    lpgbt_loads_tcs,lpgbt_loads_words,lpgbt_layers = getHexModuleLoadInfo(data,data_tcs_passing,data_tcs_passing_scin)
+    data_tcs_passing,data_tcs_passing_scin = getTCsPassing(CMSSW_Silicon,CMSSW_Scintillator) #from CMSSW    
+    module_loads_words,module_layers,u,v = getHexModuleLoadInfo(data,data_tcs_passing,data_tcs_passing_scin)
 
-    plot(lpgbt_loads_tcs,"loads_tcs.png",binwidth=0.1,xtitle='Number of TCs on a single lpGBT')
-    plot(lpgbt_loads_words,"loads_words.png",binwidth=0.1,xtitle='Number of words on a single lpGBT')
-    plot2D(lpgbt_loads_tcs,lpgbt_layers,"tcs_vs_layer.png",xtitle='Number of TCs on a single lpGBT')
-    plot2D(lpgbt_loads_words,lpgbt_layers,"words_vs_layer.png",xtitle='Number of words on a single lpGBT')
+    plot(module_loads_words,"module_loads_words.png",binwidth=0.01,xtitle=r'Average number of words on a single module / $2 \times N_{e-links}$',outdir=output_dir)
+    plot2D(module_loads_words,module_layers,"module_words_vs_layer.png",binwidthx=0.05,binwidthy=1,xtitle=r'Average number of words on a single module / $2 \times N_{e-links}$',outdir=output_dir)
     
 def produce_AllocationFile(allocation,file_name="allocation.txt"):
 
@@ -369,10 +378,23 @@ def produce_nTCsPerModuleHists(allocation,CMSSW_ModuleHists):
 
         outfile.cd()
 
+def check_for_missing_modules(Configuration):
+
+    subconfig = Configuration['check_for_missing_modules']
     
-def check_for_missing_modules_inMappingFile(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
+    if ( subconfig['inMappingFile'] ):
+        print("Missing modules in mapping file: "+ subconfig['MappingFile'] + "\n")
+        check_for_missing_modules_inMappingFile(subconfig)
+    if ( subconfig['inCMSSW'] ):
+        print("\nMissing modules in CMSSW\n")
+        check_for_missing_modules_inCMSSW(subconfig)
+            
+def check_for_missing_modules_inMappingFile(subconfig):
 
     #Check for modules missing in the mapping file
+    MappingFile = subconfig['MappingFile']
+    CMSSW_Silicon = subconfig['CMSSW_Silicon']
+    CMSSW_Scintillator = subconfig['CMSSW_Scintillator']
     
     #Load external data
     data = loadDataFile(MappingFile) #dataframe    
@@ -396,7 +418,11 @@ def check_for_missing_modules_inMappingFile(MappingFile,CMSSW_Silicon,CMSSW_Scin
     print ("Scintillator")
     print (onlycmssw_scin[onlycmssw_scin['nTCs']>0][['layer','u','v']].to_string(index=False))
 
-def check_for_missing_modules_inCMSSW(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
+def check_for_missing_modules_inCMSSW(subconfig):
+
+    MappingFile = subconfig['MappingFile']
+    CMSSW_Silicon = subconfig['CMSSW_Silicon']
+    CMSSW_Scintillator = subconfig['CMSSW_Scintillator']
 
     #Load external data
     data = loadDataFile(MappingFile) #dataframe    
@@ -412,28 +438,28 @@ def study_mapping(Configuration):
         git = "no git repository detected"
         
     #Global settings
-    output_dir=Configuration['output_dir']
-    print_level=Configuration['print_level']
+    output_dir = Configuration['output_dir']
+    print_level = Configuration['print_level']
     
     #Function specific settings
     subconfig = Configuration['study_mapping']
     MappingFile = subconfig['MappingFile']
     CMSSW_ModuleHists = subconfig['CMSSW_ModuleHists']
-    algorithm=subconfig['algorithm']
-    initial_state=subconfig['initial_state']
-    max_iterations=subconfig['max_iterations']
-    max_calls=subconfig['max_calls']
-    minigroup_type=subconfig['minigroup_type']
-    TowerMappingFile=subconfig['TowerMappingFile']
-    TowerPhiSplit=subconfig['TowerPhiSplit']
+    algorithm = subconfig['algorithm']
+    initial_state = subconfig['initial_state']
+    max_iterations = subconfig['max_iterations']
+    max_calls = subconfig['max_calls']
+    minigroup_type = subconfig['minigroup_type']
+    TowerMappingFile = subconfig['TowerMappingFile']
+    TowerPhiSplit = subconfig['TowerPhiSplit']
 
-    random_seed=subconfig['random_seed']
+    random_seed = subconfig['random_seed']
     if random_seed == None:
         random_seed = random.randrange(2**32-1)
     
     fpgaConfig = None
     correctionConfig = None
-    chi2Config=None
+    chi2Config = None
     phisplitConfig = None
     cmsswNtuple = ""
     
@@ -704,25 +730,13 @@ def main():
         study_mapping(config)
 
     if ( config['function']['check_for_missing_modules'] ):
-        subconfig = config['check_for_missing_modules']
-        if ( subconfig['inMappingFile'] ):
-            print("Missing modules in mapping file: "+ subconfig['MappingFile'] + "\n")
-            check_for_missing_modules_inMappingFile(subconfig['MappingFile'],subconfig['CMSSW_Silicon'],subconfig['CMSSW_Scintillator'])
-        if ( subconfig['inCMSSW'] ):
-            print("\nMissing modules in CMSSW\n")
-            check_for_missing_modules_inCMSSW(subconfig['MappingFile'],subconfig['CMSSW_Silicon'],subconfig['CMSSW_Scintillator'])
+        check_for_missing_modules(config)
 
     if ( config['function']['plot_lpGBTLoads'] ):
-        subconfig = config['plot_lpGBTLoads']
-        plot_lpGBTLoads(subconfig['MappingFile'],subconfig['CMSSW_Silicon'],subconfig['CMSSW_Scintillator'])
+        plot_lpGBTLoads(config)
 
     if ( config['function']['plot_ModuleLoads'] ):
-        subconfig = config['plot_ModuleLoads']
-        plot_ModuleLoads(subconfig['MappingFile'],subconfig['CMSSW_Silicon'],subconfig['CMSSW_Scintillator'])
-
-    if ( config['function']['plot_ModuleLoads'] ):
-        subconfig = config['plot_ModuleLoads']
-        plot_ModuleLoads(subconfig['MappingFile'],subconfig['CMSSW_Silicon'],subconfig['CMSSW_Scintillator'])
+        plot_ModuleLoads(config)
 
     if ( config['function']['produce_AllocationFile'] ):
         subconfig = config['produce_AllocationFile']
