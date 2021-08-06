@@ -66,8 +66,8 @@ truncationConfig:
        20., 24., 18., 16., 14., 11.,  5.,  6.,  4.,  3.,  4.,  3.,  2.,
         2.,  0.,  0.]
   option7:
-    maxTCsA: 210
-    maxTCsB: 210
+    maxTCsA: 420
+    maxTCsB: 420
     nLinks: 3
     regionADefinition: X
     regionBDefinition: Y    
