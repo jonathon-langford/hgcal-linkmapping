@@ -81,8 +81,12 @@ def loadConfiguration(config):
     infodict = {}
     
     #Load input information
-    with open(config, "rb") as filep:
-        info = pickle.load(filep)
+    try:
+        with open(config, "rb") as filep:
+            info = pickle.load(filep)
+    except:
+        print ("mapping file " + config + " not found")
+        exit()
 
     #List of which minigroups are assigned to each bundle 
     infodict['mapping'] = np.hstack(info[0])
@@ -186,7 +190,13 @@ def getModuleTCHists(HistFile):
     module_hists = {}
 
     if not HistFile in infiles:
-        infiles[HistFile] = ROOT.TFile.Open(HistFile,"READ")
+        rootfile = ROOT.TFile.Open(HistFile,"READ")
+
+        if rootfile:
+            infiles[HistFile] = rootfile
+        else:
+            print ("file " + HistFile + " not found")
+            exit()
 
     list_of_hists = [hist.GetName() for hist in infiles[HistFile].GetListOfKeys()]
     

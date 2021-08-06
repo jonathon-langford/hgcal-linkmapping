@@ -72,8 +72,12 @@ def plot_ModuleLoads(Configuration):
     plot(module_loads_words,"module_loads_words.png",binwidth=0.01,xtitle=r'Average number of words on a single module / $2 \times N_{e-links}$',outdir=output_dir)
     plot2D(module_loads_words,module_layers,"module_words_vs_layer.png",binwidthx=0.05,binwidthy=1,xtitle=r'Average number of words on a single module / $2 \times N_{e-links}$',outdir=output_dir)
     
-def produce_AllocationFile(allocation,file_name="allocation.txt"):
+def produce_AllocationFile(Configuration):
 
+    subconfig = Configuration['produce_AllocationFile']
+    allocation = subconfig['allocation']
+    file_name = subconfig['file_name']
+    
     #Load allocation information
     info = loadConfiguration(allocation)
     data = info['data']
@@ -151,8 +155,15 @@ class MyEncoder(json.JSONEncoder):
 
         return json_repr
     
-def produce_JsonMappingFile(allocation,output_name="hgcal_trigger_link_mapping.json",disconnected_modules=None):
+def produce_JsonMappingFile(Configuration):
 
+    subconfig = Configuration['produce_JsonMappingFile']
+    allocation = subconfig['allocation']
+    output_name = subconfig['output_name']
+    disconnected_modules = None
+    if 'disconnected_modules' in subconfig.keys():
+        disconnected_modules = subconfig['disconnected_modules']
+    
     #Load allocation information
     info = loadConfiguration(allocation)
     data = info['data']
@@ -343,8 +354,12 @@ def produce_JsonMappingFile(allocation,output_name="hgcal_trigger_link_mapping.j
         data = json.dumps(json_main, ensure_ascii=False, cls=MyEncoder, indent=4)
         fp.write(data)
     
-def produce_nTCsPerModuleHists(allocation,CMSSW_ModuleHists):
+def produce_nTCsPerModuleHists(Configuration):
 
+    subconfig = Configuration['produce_nTCsPerModuleHists']
+    allocation = subconfig['allocation']
+    CMSSW_ModuleHists = subconfig['CMSSW_ModuleHists']
+    
     #Load allocation information
     info = loadConfiguration(allocation)
     data = info['data']
@@ -725,33 +740,28 @@ def main():
     signal.signal(signal.SIGXCPU,handler)
 
     ROOT.TH1.SetDefaultSumw2()
+
+    function_choice = config['function']
     
-    if ( config['function']['study_mapping'] ):                    
+    if ( function_choice['study_mapping'] ):                    
         study_mapping(config)
 
-    if ( config['function']['check_for_missing_modules'] ):
+    if ( function_choice['check_for_missing_modules'] ):
         check_for_missing_modules(config)
 
-    if ( config['function']['plot_lpGBTLoads'] ):
+    if ( function_choice['plot_lpGBTLoads'] ):
         plot_lpGBTLoads(config)
 
-    if ( config['function']['plot_ModuleLoads'] ):
+    if ( function_choice['plot_ModuleLoads'] ):
         plot_ModuleLoads(config)
 
-    if ( config['function']['produce_AllocationFile'] ):
-        subconfig = config['produce_AllocationFile']
-        produce_AllocationFile(subconfig['allocation'],file_name=subconfig['file_name'])
+    if ( function_choice['produce_AllocationFile'] ):
+        produce_AllocationFile(config)
 
-    if ( config['function']['produce_nTCsPerModuleHists'] ):
-        subconfig = config['produce_nTCsPerModuleHists']
-        produce_nTCsPerModuleHists(subconfig['allocation'],CMSSW_ModuleHists = subconfig['CMSSW_ModuleHists'])
+    if ( function_choice['produce_nTCsPerModuleHists'] ):
+        produce_nTCsPerModuleHists(config)
 
-    if ( config['function']['produce_JsonMappingFile'] ):
-        subconfig = config['produce_JsonMappingFile']
-        disconnected_modules = None
-        if 'disconnected_modules' in subconfig.keys():
-            disconnected_modules = subconfig['disconnected_modules']
-        produce_JsonMappingFile(subconfig['allocation'],output_name=subconfig['output_name'],disconnected_modules=disconnected_modules)
-
+    if ( function_choice['produce_JsonMappingFile'] ):
+        produce_JsonMappingFile(config)
     
 main()
