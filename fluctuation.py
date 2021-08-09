@@ -169,10 +169,29 @@ def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata, truncation_options, rover
     predetermined_values = []
     regionADefinitions = []
     regionBDefinitions = []
+    definitionOptions = ['X', 'Y', 'X+Y']
     
     for option in truncation_options:
-        regionADefinitions.append(option['regionADefinition'])
-        regionBDefinitions.append(option['regionBDefinition'])
+        if 'regionADefinition' in option.keys():
+            if option['regionADefinition'] in definitionOptions:
+                regionADefinitions.append(option['regionADefinition'])
+            else:
+                print ("Not a valid option for regionADefinition, assuming regionADefinition==X")
+                regionADefinitions.append('X')
+        else:
+            print ("regionADefinition not given, assuming regionADefinition==X")
+            regionADefinitions.append('X')
+
+        if 'regionBDefinition' in option.keys():
+            if option['regionBDefinition'] in definitionOptions:
+                regionBDefinitions.append(option['regionBDefinition'])
+            else:
+                print ("Not a valid option for regionBDefinition, assuming regionBDefinition==Y")
+                regionBDefinitions.append('Y')
+        else:
+            print ("regionBDefinition not given, assuming regionBDefinition==Y")
+            regionBDefinitions.append('Y')
+            
         TCratio.append(option['maxTCsA']/option['maxTCsB'])
         predetermined_values.append(option['predetermined_values'])
         
@@ -214,19 +233,15 @@ def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata, truncation_options, rover
                 regionA = phidivisionY[:]
             elif  adef == "X+Y":
                 regionA = inclusive[:]
-            else:
-                print ("Not a valid option for regionADefinition, assuming regionADefinition==X")
-                regionA = phidivisionX[:]
-
+            #Should not be any further possibilities
+            
             if bdef == "X":
                 regionB = phidivisionX[:]
             elif bdef == "Y":
                 regionB = phidivisionY[:]
             elif  bdef == "X+Y":
                 regionB = inclusive[:]
-            else:
-                print ("Not a valid option for regionBDefinition, assuming regionBDefinition==X")
-                regionB = phidivisionY[:]
+            #Should not be any further possibilities
 
             digitised_regionA_rawdata = np.digitize(regionA[:,0],roverzBinning)
             digitised_regionB_rawdata = np.digitize(regionB[:,0],roverzBinning)                

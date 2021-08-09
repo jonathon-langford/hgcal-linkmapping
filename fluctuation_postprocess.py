@@ -433,26 +433,35 @@ def studyTruncationOptions(eventData, options_to_study, truncation_values_method
 
         truncation_options.append(truncationConfig['option'+str(option)])
 
-        if truncation_options[-1]['regionADefinition'] == "X":
-            regionA_bundled_lpgbthists_allevents.append(phidivisionX_bundled_lpgbthists_allevents)
-        elif truncation_options[-1]['regionADefinition'] == "Y":
-            regionA_bundled_lpgbthists_allevents.append(phidivisionY_bundled_lpgbthists_allevents)
-        elif truncation_options[-1]['regionADefinition'] == "X+Y":
-            regionA_bundled_lpgbthists_allevents.append(inclusive_bundled_lpgbthists_allevents)
+        if 'regionADefinition' in truncation_options[-1].keys():
+            if truncation_options[-1]['regionADefinition'] == "X":
+                regionA_bundled_lpgbthists_allevents.append(phidivisionX_bundled_lpgbthists_allevents)
+            elif truncation_options[-1]['regionADefinition'] == "Y":
+                regionA_bundled_lpgbthists_allevents.append(phidivisionY_bundled_lpgbthists_allevents)
+            elif truncation_options[-1]['regionADefinition'] == "X+Y":
+                regionA_bundled_lpgbthists_allevents.append(inclusive_bundled_lpgbthists_allevents)
+            else:
+                print ("Not a valid option for regionADefinition, assuming regionADefinition==X")
+                regionA_bundled_lpgbthists_allevents.append(phidivisionX_bundled_lpgbthists_allevents)
         else:
-            print ("Not a valid option for regionADefinition, assuming regionADefinition==X")
+            print ("regionADefinition not given, assuming regionADefinition==X")
             regionA_bundled_lpgbthists_allevents.append(phidivisionX_bundled_lpgbthists_allevents)
-        
-        if truncation_options[-1]['regionBDefinition'] == "X":
-            regionB_bundled_lpgbthists_allevents.append(phidivisionX_bundled_lpgbthists_allevents)
-        elif truncation_options[-1]['regionBDefinition'] == "Y":
-            regionB_bundled_lpgbthists_allevents.append(phidivisionY_bundled_lpgbthists_allevents)
-        elif truncation_options[-1]['regionBDefinition'] == "X+Y":
-            regionB_bundled_lpgbthists_allevents.append(inclusive_bundled_lpgbthists_allevents)
-        else:
-            print ("Not a valid option for regionBDefinition, assuming regionADefinition==Y")
-            regionA_bundled_lpgbthists_allevents.append(phidivisionY_bundled_lpgbthists_allevents)
 
+                
+        if 'regionBDefinition' in truncation_options[-1].keys():
+            if truncation_options[-1]['regionBDefinition'] == "X":
+                regionB_bundled_lpgbthists_allevents.append(phidivisionX_bundled_lpgbthists_allevents)
+            elif truncation_options[-1]['regionBDefinition'] == "Y":
+                regionB_bundled_lpgbthists_allevents.append(phidivisionY_bundled_lpgbthists_allevents)
+            elif truncation_options[-1]['regionBDefinition'] == "X+Y":
+                regionB_bundled_lpgbthists_allevents.append(inclusive_bundled_lpgbthists_allevents)
+            else:
+                print ("Not a valid option for regionBDefinition, assuming regionBDefinition==Y")
+                regionB_bundled_lpgbthists_allevents.append(phidivisionY_bundled_lpgbthists_allevents)
+        else:
+            print ("regionBDefinition not given, assuming regionBDefinition==Y")
+                regionB_bundled_lpgbthists_allevents.append(phidivisionY_bundled_lpgbthists_allevents)
+            
         if truncation_values_method == "original":
             truncation_values.append( getTruncationValuesRoverZ(regionA_bundled_lpgbthists_allevents[-1],regionB_bundled_lpgbthists_allevents[-1],truncation_options[-1]['maxTCsA'],truncation_options[-1]['maxTCsB']) )
 
