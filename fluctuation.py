@@ -199,7 +199,7 @@ def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata, truncation_options, rover
         regionB_truncated_summed = np.zeros(len(roverzBinning)-1)
         
         #Loop over each bundle
-        for b in range(len(regionA)):
+        for b in range(len(bundled_tc_Pt_rawdata[0])):
 
             #Get lists of (r/z, pt) pairs
             phidivisionX = np.asarray(bundled_tc_Pt_rawdata[0][b])
