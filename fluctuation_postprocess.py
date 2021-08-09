@@ -181,7 +181,7 @@ def plot_frac_Vs_ROverZ( dataA, dataB, truncation_curve, TCratio, axis, title, s
     pl.step(axis,np.append( ratioA , ratioA[-1] ),color='red',linewidth='1', where = 'post', label='data A')
     pl.step(axis,np.append( ratioB , ratioB[-1] ),color='orange',linewidth='1', where = 'post', label='data B')
     pl.xlabel('r/z')
-    pl.ylabel('Sum truncated TCs / Sum all TCs')
+    pl.ylabel('Sum TCs with truncation / Sum all TCs')
     pl.title(title)
     pl.ylim((0.6,1.05))
     pl.legend(loc='lower left')
@@ -468,27 +468,13 @@ def studyTruncationOptions(eventData, options_to_study, truncation_values_method
     #Once we have the truncation values, need to find how many TCs are lost
     print ("Plotting histograms")
     #Fill a 2D histogram per bunch-crossing with N_TCs (maximum over bundles) 
+    TCratios = []
+    for option in truncation_options:
+        TCratios.append(option['maxTCsA']/option['maxTCsB'])
 
-    #If options 1,2 or 3 (3-links) or 4,5 (4-links) are included in options_to_study
-    options_3links = []
-    options_3links_TCratio = []
-    options_4links = []
-    options_4links_TCratio = []
-    for option,truncation in zip(truncation_options,truncation_values):
-        if option['nLinks'] == 3:
-            options_3links.append(truncation)
-            options_3links_TCratio.append(option['maxTCsA']/option['maxTCsB'])
-        elif option['nLinks'] == 4:
-            options_4links.append(truncation)
-            options_4links_TCratio.append(option['maxTCsA']/option['maxTCsB'])
-
-    if ( len(options_3links) > 0 ):                
-        plot_NTCs_Vs_ROverZ(regionA_bundled_lpgbthists_allevents[-1],inclusive_hists[1],outdir + "/NTCs_Vs_ROverZ_A_3links",options_3links)
-        plot_NTCs_Vs_ROverZ(regionB_bundled_lpgbthists_allevents[-1],inclusive_hists[1],outdir + "/NTCs_Vs_ROverZ_B_3links",options_3links,options_3links_TCratio)
-
-    if ( len(options_4links) > 0 ):                
-        plot_NTCs_Vs_ROverZ(regionA_bundled_lpgbthists_allevents[-1],inclusive_hists[1],outdir + "/NTCs_Vs_ROverZ_A_4links",options_4links)
-        plot_NTCs_Vs_ROverZ(regionB_bundled_lpgbthists_allevents[-1],inclusive_hists[1],outdir + "/NTCs_Vs_ROverZ_B_4links",options_4links,options_4links_TCratio)
+    if ( len(truncation_options) > 0 ):                
+        plot_NTCs_Vs_ROverZ(regionA_bundled_lpgbthists_allevents[-1],inclusive_hists[1],outdir + "/NTCs_Vs_ROverZ_A",truncation_values)
+        plot_NTCs_Vs_ROverZ(regionB_bundled_lpgbthists_allevents[-1],inclusive_hists[1],outdir + "/NTCs_Vs_ROverZ_B",truncation_values,TCratios)
 
     #Plot sum of truncated TCs over the sum of all TCs
     for (study_num,option,values,regionA,regionB) in zip(options_to_study,truncation_options,truncation_values,regionA_bundled_lpgbthists_allevents,regionB_bundled_lpgbthists_allevents):
@@ -499,12 +485,10 @@ def plotTruncation(eventData, outdir = ".", useMaximumXY = True, binningConfig =
     os.system("mkdir -p " + outdir)
 
     if ( binningConfig != None ):        
-        nROverZBins = binningConfig["nROverZBins"]
         rOverZMin = binningConfig["rOverZMin"]
         rOverZMax = binningConfig["rOverZMax"]
     else:
         #Set defaults
-        nROverZBins = 42
         rOverZMin = 0.07587128
         rOverZMax = 0.55563514
     
@@ -512,6 +496,7 @@ def plotTruncation(eventData, outdir = ".", useMaximumXY = True, binningConfig =
     phidivisionX_bundled_lpgbthists_allevents,phidivisionY_bundled_lpgbthists_allevents = loadFluctuationData(eventData)
 
     nBundles = len(phidivisionX_bundled_lpgbthists_allevents[0]) #24 by default
+    nROverZBins = len(phidivisionX_bundled_lpgbthists_allevents[0][0]) #42 by default
     
     #To get binning for r/z histograms
     inclusive_hists = np.histogram( np.empty(0), bins = nROverZBins, range = (rOverZMin,rOverZMax) )
@@ -638,14 +623,12 @@ def plot_Truncation_tc_Pt(eventData, options_to_study, truncationConfig = None, 
     with open(eventData, "rb") as filep:   
         data = pickle.load(filep)
 
-    #Load the number of links for the truncation options
-    nLinks = []
-    if ( truncationConfig != None ):
-        for option in options_to_study:
-            nLinks.append(truncationConfig['option'+str(option)]['nLinks'])
+    #Identifiers for regionA and regionB
+    dataA = 0
+    dataB = 1
 
     nROverZBins = len(data[0][0][0]) #42 by default
-    axis =  np.histogram( np.empty(0), bins = nROverZBins, range = (rOverZMin,rOverZMax) )[1]
+    inclusive_hists =  np.histogram( np.empty(0), bins = nROverZBins, range = (rOverZMin,rOverZMax) )[1]
 
     truncation_options_regionA = []
     truncation_options_regionB = []
@@ -659,18 +642,15 @@ def plot_Truncation_tc_Pt(eventData, options_to_study, truncationConfig = None, 
         dataB_allevents = np.empty((len(data),nROverZBins)) 
 
         for e,event in enumerate(data):        
-            #if e>4: continue
-            dataA_allevents[e] = np.asarray( event[t][0] )
-            dataB_allevents[e] = np.asarray( event[t][1] )
+            dataA_allevents[e] = np.asarray( event[t][dataA] )
+            dataB_allevents[e] = np.asarray( event[t][dataB] )
         
         truncation_options_regionA.append(dataA_allevents)
         truncation_options_regionB.append(dataB_allevents)
 
-
     #Sum over all events and bundles of TCs (in each R/Z bin) 
     totalsumA = np.sum( truncation_options_regionA[0] , axis=0 )
     totalsumB = np.sum( truncation_options_regionB[0] , axis=0 )
-    totalsumInclusive = totalsumA + totalsumB
 
     #Loop over truncation options
     for t,(truncationA,truncationB) in enumerate(zip(truncation_options_regionA,truncation_options_regionB)):
@@ -685,18 +665,15 @@ def plot_Truncation_tc_Pt(eventData, options_to_study, truncationConfig = None, 
         #Divide to get the fraction, taking into account division by zero
         #We assume that the order of options in the input-data is the same as
         #the order of options provided in the config
-        if (nLinks[t-1] == 3 ):
-            ratioA = np.divide(   truncatedsum_A, totalsumInclusive , out=np.ones_like(truncatedsum_A), where=totalsumInclusive!=0 )
-        elif (nLinks[t-1] == 4 ):
-            ratioA = np.divide(   truncatedsum_A, totalsumA , out=np.ones_like(truncatedsum_A), where=totalsumA!=0 )
+        ratioA = np.divide(   truncatedsum_A, totalsumA , out=np.ones_like(truncatedsum_A), where=totalsumA!=0 )
         ratioB = np.divide(   truncatedsum_B, totalsumB , out=np.ones_like(truncatedsum_B), where=totalsumB!=0 )
         
         pl.clf()
-        pl.step(axis,np.append( ratioA , ratioA[-1] ),color='red',linewidth='1', where = 'post', label='data A')
-        pl.step(axis,np.append( ratioB , ratioB[-1] ),color='orange',linewidth='1', where = 'post', label='data B')
+        pl.step(inclusive_hists,np.append( ratioA , ratioA[-1] ),color='red',linewidth='1', where = 'post', label='data A')
+        pl.step(inclusive_hists,np.append( ratioB , ratioB[-1] ),color='orange',linewidth='1', where = 'post', label='data B')
 
         pl.xlabel('r/z')
-        pl.ylabel('pT sum truncated TCs / pT sum all TCs')
+        pl.ylabel('pT sum TCs with truncation / pT sum all TCs')
         pl.title("Sum pT TCs Option " + str(options_to_study[t-1]) )
         pl.ylim((0.6,1.05))
         pl.legend()

@@ -99,7 +99,7 @@ The relevant input file is the same TPG CMSSW `ROOT` file that was also used to 
 In addition there is also the `tcPtConfig`.
 There is the option (if `save_sum_tcPt` = `True`) to save the sum of (truncated or total) trigger cell p<sub>T</sub> as a function of r/z for each event.
 In this case one also needs to fill the block `truncationConfig`, detailing the trigger cell limits and definition of the links.
-Various options of interest can be defined. Each must give the maximum number of trigger cells (TCs) on a link in regionA and regionB (`maxTCsA` and `maxTCsB` respectively). Then the number of links between Stage 1 and Stage 2 (`nLinks`) as well as how regionA and regionB are defined in terms of `phiDivisionX` and `phiDivisionY` (`regionADefinition` and `regionBDefinition`).
+Various options of interest can be defined. Each must give the maximum number of trigger cells (TCs) on a link in regionA and regionB (`maxTCsA` and `maxTCsB` respectively). Then how regionA and regionB are defined in terms of `phiDivisionX` and `phiDivisionY` (`regionADefinition` and `regionBDefinition`).
 Finally it is necessary to give the TC truncation values in each r/z bin (as a list using the parameter `predetermined_values`). These must be determined in an initial run (see below for how) as otherwise the output files are too large.
 For each r/z bin the trigger cells are ordered in p<sub>T</sub> and the lowest valued ones are removed if truncation is required.
 

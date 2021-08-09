@@ -160,45 +160,77 @@ def etaphiMapping(layer, etaphi, mappingFile):
         
     return [ep,pp],sector
 
-def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata,truncation_values, TCratio, roverzBinning, nLinks):
+def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata, truncation_options, roverzBinning):
 
-    #truncation_values is a list containing the truncation_options to study.
+    #truncation_options is a list containing the truncation_options to study.
     #an element is inserted such that the sum without truncation is also available
-    truncation_max = np.full(len(truncation_values[0]),1000)
 
-    truncation_values_loop = truncation_values.copy()
+    TCratio = []
+    predetermined_values = []
+    regionADefinitions = []
+    regionBDefinitions = []
+    
+    for option in truncation_options:
+        regionADefinitions.append(option['regionADefinition'])
+        regionBDefinitions.append(option['regionBDefinition'])
+        TCratio.append(option['maxTCsA']/option['maxTCsB'])
+        predetermined_values.append(option['predetermined_values'])
+        
+    truncation_max = np.full(len(predetermined_values[0]),1000)
+
+    truncation_values_loop = predetermined_values.copy()
     TCratio_loop = TCratio.copy()
-    nLinks_loop = nLinks.copy()
+    regionADefinitions_loop = regionADefinitions.copy()
+    regionBDefinitions_loop = regionBDefinitions.copy()
     truncation_values_loop.insert( 0, truncation_max )
     TCratio_loop.insert( 0, 1. )
-    nLinks_loop.insert( 0, 4 )#The two phi divisions are saved independently, so both options can be recreated later
-
+    #The two phi divisions are saved independently, so both options can be recreated later
+    regionADefinitions_loop.insert( 0, "X" )
+    regionBDefinitions_loop.insert( 0, "Y" )
+    
     alldata = [] #Output list
 
-    for a,(truncation,ratio,links) in enumerate(zip(truncation_values_loop,TCratio_loop,nLinks_loop)):
+    for a,(truncation,ratio,adef,bdef) in enumerate(zip(truncation_values_loop,TCratio_loop,regionADefinitions_loop,regionBDefinitions_loop)):
         
         bundled_pt_hists_truncated = []
 
-        #Need to consider phi regions at the same time, as the relevant "A" region might be inclusive in phi
+        #Need to consider phi regions at the same time, as the relevant "A" or "B" region might be inclusive in phi
         regionA_truncated_summed = np.zeros(len(roverzBinning)-1)
         regionB_truncated_summed = np.zeros(len(roverzBinning)-1)
         
         #Loop over each bundle
-        for b in range(len(bundled_tc_Pt_rawdata[0])):
+        for b in range(len(regionA)):
 
             #Get lists of (r/z, pt) pairs
             phidivisionX = np.asarray(bundled_tc_Pt_rawdata[0][b])
             phidivisionY = np.asarray(bundled_tc_Pt_rawdata[1][b])
             inclusive = np.asarray(bundled_tc_Pt_rawdata[0][b] + bundled_tc_Pt_rawdata[1][b])
-
+                       
             #Find out how many TCs should be truncated
             #Bin the raw pT data
-            if links == 3:
-                digitised_regionA_rawdata = np.digitize(inclusive[:,0],roverzBinning)
-            elif links == 4:
-                digitised_regionA_rawdata = np.digitize(phidivisionX[:,0],roverzBinning)
-            digitised_regionB_rawdata = np.digitize(phidivisionY[:,0],roverzBinning)
+            if adef == "X":
+                regionA = phidivisionX[:]
+            elif adef == "Y":
+                regionA = phidivisionY[:]
+            elif  adef == "X+Y":
+                regionA = inclusive[:]
+            else:
+                print ("Not a valid option for regionADefinition, assuming regionADefinition==X")
+                regionA = phidivisionX[:]
 
+            if bdef == "X":
+                regionB = phidivisionX[:]
+            elif bdef == "Y":
+                regionB = phidivisionY[:]
+            elif  bdef == "X+Y":
+                regionB = inclusive[:]
+            else:
+                print ("Not a valid option for regionBDefinition, assuming regionBDefinition==X")
+                regionB = phidivisionY[:]
+
+            digitised_regionA_rawdata = np.digitize(regionA[:,0],roverzBinning)
+            digitised_regionB_rawdata = np.digitize(regionB[:,0],roverzBinning)                
+            
             sumPt_truncated_regionA = np.zeros(len(roverzBinning)-1)
             sumPt_truncated_regionB = np.zeros(len(roverzBinning)-1)
 
@@ -206,12 +238,8 @@ def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata,truncation_values, TCratio
 
             for roverz in range(len(roverzBinning)-1):
                 #Get the pT values for the relevant R/Z bin
-                if links == 3:
-                    pt_values_regionA = inclusive[digitised_regionA_rawdata==roverz+1][:,1] #roverz+1 to convert from index to digitised bin number
-                elif links == 4:
-                    pt_values_regionA = phidivisionX[digitised_regionA_rawdata==roverz+1][:,1] #roverz+1 to convert from index to digitised bin number
-                pt_values_regionB = phidivisionY[digitised_regionB_rawdata==roverz+1][:,1] 
-
+                pt_values_regionA = regionA[digitised_regionA_rawdata==roverz+1][:,1] #roverz+1 to convert from index to digitised bin number
+                pt_values_regionB = regionB[digitised_regionB_rawdata==roverz+1][:,1] 
                 #Get the number to be truncated in each region in an R/Z bin
                 number_truncated_regionA = int(max(0,len(pt_values_regionA)-truncation[roverz]))
                 if ( ratio.is_integer() ):
@@ -279,8 +307,6 @@ def checkFluctuations(initial_state, cmsswNtuple, outputName="alldata", tcPtConf
     
     #Load the truncation options, if need to truncate based on E_T when running over ntuple (save_sum_tcPt == True)
     truncation_options = []
-    ABratios = []
-    nLinks = []
     save_sum_tcPt = False
     if ( tcPtConfig != None ):
         save_sum_tcPt = tcPtConfig['save_sum_tcPt']
@@ -288,9 +314,7 @@ def checkFluctuations(initial_state, cmsswNtuple, outputName="alldata", tcPtConf
             options_to_study = tcPtConfig['options_to_study']
             if ( truncationConfig != None ):
                 for option in options_to_study:
-                    truncation_options.append(truncationConfig['option'+str(option)]['predetermined_values'])
-                    ABratios.append(truncationConfig['option'+str(option)]['maxTCsA']/truncationConfig['option'+str(option)]['maxTCsB'])
-                    nLinks.append(truncationConfig['option'+str(option)]['nLinks'])
+                    truncation_options.append(truncationConfig['option'+str(option)])
 
     #Load the CMSSW ntuple to get per event and per trigger cell information
     rootfile = ROOT.TFile.Open( cmsswNtuple , "READ" )
@@ -504,9 +528,7 @@ def checkFluctuations(initial_state, cmsswNtuple, outputName="alldata", tcPtConf
                         bundled_tc_Pt_rawdata = getBundledTCPtRawData(minigroup_tc_Pt_rawdata,bundles)
 
                         #Get histograms of (truncated) sum pT per r/z bin
-                        bundled_pt_hists = applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata,
-                                                                       truncation_options,
-                                                                       ABratios,roverzBinning,nLinks)
+                        bundled_pt_hists = applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata, truncation_options, roverzBinning)
 
                         bundled_pt_hists_allevents.append(bundled_pt_hists)
 

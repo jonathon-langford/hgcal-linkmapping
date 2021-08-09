@@ -19,7 +19,6 @@ truncationConfig:
   option1:
     maxTCsA: 200
     maxTCsB: 200
-    nLinks: 3
     regionADefinition: X #X, Y or X+Y
     regionBDefinition: Y #X, Y or X+Y
     predetermined_values: [ 1,  4, 14, 13, 10,  9,  8,  7,  7,  7,  6,  6,  6,  6,  5,  5,  5,
@@ -28,7 +27,6 @@ truncationConfig:
   option2:
     maxTCsA: 400
     maxTCsB: 302
-    nLinks: 3
     regionADefinition: X+Y
     regionBDefinition: Y    
     predetermined_values: [ 1.,  6., 16., 14., 17., 13., 13., 17., 19., 12., 10., 14., 12.,
@@ -38,7 +36,6 @@ truncationConfig:
   option3:
     maxTCsA: 714
     maxTCsB: 357
-    nLinks: 3
     regionADefinition: X+Y
     regionBDefinition: Y
     predetermined_values: [ 1., 12., 26., 23., 31., 23., 21., 30., 34., 20., 18., 25., 23.,
@@ -48,7 +45,6 @@ truncationConfig:
   option4:
     maxTCsA: 466
     maxTCsB: 466
-    nLinks: 4
     regionADefinition: X
     regionBDefinition: Y    
     predetermined_values: [ 1.,  6., 16., 14., 19., 13., 15., 17., 15., 16., 15., 14., 15.,
@@ -58,7 +54,6 @@ truncationConfig:
   option5:
     maxTCsA: 780
     maxTCsB: 780
-    nLinks: 4
     regionADefinition: X
     regionBDefinition: Y    
     predetermined_values: [ 2., 10., 28., 24., 32., 22., 25., 28., 26., 27., 25., 23., 26.,
@@ -68,7 +63,6 @@ truncationConfig:
   option7:
     maxTCsA: 420
     maxTCsB: 420
-    nLinks: 3
     regionADefinition: X
     regionBDefinition: Y    
     predetermined_values: [ 1,  4, 13, 13, 10, 10,  8,  8,  8,  7,  7,
