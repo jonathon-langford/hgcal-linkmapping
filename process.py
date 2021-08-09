@@ -1,29 +1,28 @@
 #!/usr/bin/env python3
 import pandas as pd
 import numpy as np
-from rotate import rotate_to_sector_0
-import matplotlib.pyplot as plt
 import ROOT
-import time
-import itertools
-import random
 import sys
-from root_numpy import hist2array
 import ctypes
-import re
+import pickle
+import os
 
 np.set_printoptions(threshold=sys.maxsize)
 pd.set_option('display.max_rows', None)
 
-infiles = []
+infiles = {}
 
 def loadDataFile(MappingFile):
 
     column_names=['layer', 'u', 'v', 'density', 'shape', 'nDAQ', 'nTPG','DAQId1','nDAQeLinks1','DAQId2','nDAQeLinks2','TPGId1','nTPGeLinks1','TPGId2','nTPGeLinks2']
 
     #Read in data file
-    data = pd.read_csv(MappingFile,delim_whitespace=True,names=column_names)
-
+    try:
+        data = pd.read_csv(MappingFile,delim_whitespace=True,names=column_names)
+    except:    
+        print ("mapping file " + MappingFile + " not found")
+        exit()
+        
     #For a given module you need to know the total number of e-links
     data['TPGeLinkSum'] = data[['nTPGeLinks1','nTPGeLinks2']].sum(axis=1).where( data['nTPG'] == 2 , data['nTPGeLinks1'])
 
@@ -36,8 +35,16 @@ def getTCsPassing(CMSSW_Silicon,CMSSW_Scintillator):
 
     #Set number of TCs by hand for now (In reality this number is taken per event from CMSSW)
     column_names=[ 'u', 'v', 'layer', 'nTCs', 'nWords' ]
-    data = pd.read_csv(CMSSW_Silicon,names=column_names)
-    data_scin = pd.read_csv(CMSSW_Scintillator,names=column_names)
+    try:
+        data = pd.read_csv(CMSSW_Silicon,names=column_names)
+    except:
+        print ("file " + CMSSW_Silicon + " not found")
+        exit()
+    try:
+        data_scin = pd.read_csv(CMSSW_Scintillator,names=column_names)
+    except:
+        print ("file " + CMSSW_Scintillator + " not found")
+        exit()
 
     return data,data_scin
 
@@ -69,18 +76,88 @@ def loadModuleTowerMappingFile(MappingFile):
 
     return module_towermap
 
+def loadConfiguration(config):
+
+    infodict = {}
+    
+    #Load input information
+    try:
+        with open(config, "rb") as filep:
+            info = pickle.load(filep)
+    except:
+        print ("mapping file " + config + " not found")
+        exit()
+
+    #List of which minigroups are assigned to each bundle 
+    infodict['mapping'] = np.hstack(info[0])
+
+    #Other configurables
+    infodict['configuration'] = info[1]
+    infodict['random_seed'] = info[2]
+    infodict['nCallsToMappingMax'] = info[3]
+    infodict['max_modules'] = info[4]
+    infodict['max_towers_list'] = info[5]
+    infodict['cmsswNtuple'] = info[6]
+    infodict['git'] = info[7]
+
+    if 'fpgas' in infodict['configuration'].keys():
+        fpgaConfig = infodict['configuration']['fpgas']
+        infodict['nBundles'] = fpgaConfig["nBundles"]
+        infodict['maxInputs'] = fpgaConfig["maxInputs"]
+    else:
+        #Set defaults
+        print ("Warning: FPGA configuration not found in input, "
+        "default FPGAs being used which may not correspond "
+        "to those used when producing the mapping")
+        infodict['nBundles'] = 14
+        infodict['maxInputs'] = 120
+
+    if 'phisplit' in infodict['configuration'].keys():
+        infodict['phisplitConfig'] = infodict['configuration']['phisplit']
+    else:
+        #Set defaults
+        print ("Warning: phi-split configuration not found in input, "
+        "default configuration being used")
+        infodict['phisplitConfig'] = None
+
+    if 'corrections' in infodict['configuration'].keys():
+        infodict['correctionConfig'] = infodict['configuration']['corrections']
+    else:
+        #Set defaults
+        print ("Warning: correction configuration not found in input, "
+        "default configuration being used")
+        infodict['correctionConfig'] = None
+
+    #Load mapping file
+    MappingFile = infodict['configuration']['MappingFile']
+    if os.path.isfile(MappingFile):
+        data = loadDataFile(MappingFile)
+    else:
+        print ("Warning: input data file not found, "
+        "Therefore using a default data file which may not correspond "
+        "to that used when producing the mapping")
+        MappingFile = "data/FeMappingTpgV7.txt"
+        data = loadDataFile(MappingFile)
+
+    infodict['data'] = data
+    infodict['minigroup_type'] = infodict['configuration']['minigroup_type']
+    infodict['CMSSW_ModuleHists'] = infodict['configuration']['CMSSW_ModuleHists']
+    
+    return infodict
+
 #Legacy function to read ROverZHistograms file with 1D histograms
 def getModuleHists1D(HistFile):
 
     module_hists = []
     inclusive_hists = []
-    
-    infiles.append(ROOT.TFile.Open(HistFile,"READ"))
+
+    if not HistFile in infiles:
+        infiles[HistFile] = ROOT.TFile.Open(HistFile,"READ")
 
     inclusive = {}
     phi60 = {}
 
-    list_of_hists = [hist.GetName() for hist in infiles[-1].GetListOfKeys()]
+    list_of_hists = [hist.GetName() for hist in infiles[HistFile].GetListOfKeys()]
 
     for hist in list_of_hists:
         if "Inclusive" in hist or "ROverZ" not in hist:
@@ -90,17 +167,17 @@ def getModuleHists1D(HistFile):
         
         if "silicon" in hist:
             if "Phi60" in hist:
-                phi60[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+                phi60[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[HistFile].Get(hist)
             else:
-                inclusive[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+                inclusive[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[HistFile].Get(hist)
         elif "scintillator" in hist:
             if "Phi60" in hist:
-                phi60[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+                phi60[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[HistFile].Get(hist)
             else:
-                inclusive[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+                inclusive[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[HistFile].Get(hist)
 
-    inclusive_hists.append(infiles[-1].Get("ROverZ_Inclusive" ))
-    inclusive_hists.append(infiles[-1].Get("ROverZ_Inclusive_Phi60" ))
+    inclusive_hists.append(infiles[HistFile].Get("ROverZ_Inclusive" ))
+    inclusive_hists.append(infiles[HistFile].Get("ROverZ_Inclusive_Phi60" ))
                 
     module_hists.append(inclusive)
     module_hists.append(phi60)
@@ -111,9 +188,17 @@ def getModuleHists1D(HistFile):
 def getModuleTCHists(HistFile):
 
     module_hists = {}
-    
-    infiles.append(ROOT.TFile.Open(HistFile,"READ"))
-    list_of_hists = [hist.GetName() for hist in infiles[-1].GetListOfKeys()]
+
+    if not HistFile in infiles:
+        rootfile = ROOT.TFile.Open(HistFile,"READ")
+
+        if rootfile:
+            infiles[HistFile] = rootfile
+        else:
+            print ("file " + HistFile + " not found")
+            exit()
+
+    list_of_hists = [hist.GetName() for hist in infiles[HistFile].GetListOfKeys()]
     
     for hist in list_of_hists:
         if "nTCs" not in hist:
@@ -122,9 +207,9 @@ def getModuleTCHists(HistFile):
         ijk = hist.split("_")
 
         if "silicon" in hist:
-            module_hists[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+            module_hists[0,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[HistFile].Get(hist)
         elif "scintillator" in hist:
-            module_hists[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[-1].Get(hist)
+            module_hists[1,int(ijk[-3]),int(ijk[-2]),int(ijk[-1])] = infiles[HistFile].Get(hist)
 
     return module_hists
 
@@ -169,13 +254,14 @@ def getModuleHists(HistFile, split = "fixed", phidivisionX_fixvalue_min = 55, ph
     
     module_hists = []
     inclusive_hists = []
-    
-    infiles.append(ROOT.TFile.Open(HistFile,"READ"))
 
-    if not infiles[-1]:
+    if not HistFile in infiles:
+        infiles[HistFile] = ROOT.TFile.Open(HistFile,"READ")
+
+    if not infiles[HistFile]:
         raise EnvironmentError
-    
-    PhiVsROverZ = infiles[-1].Get("ROverZ_Inclusive" )
+
+    PhiVsROverZ = infiles[HistFile].Get("ROverZ_Inclusive" )
 
     nBinsPhi = PhiVsROverZ.GetNbinsY()    
 
@@ -205,14 +291,14 @@ def getModuleHists(HistFile, split = "fixed", phidivisionX_fixvalue_min = 55, ph
     phiDivisionX = {}
     phiDivisionY = {}
 
-    list_of_hists = [hist.GetName() for hist in infiles[-1].GetListOfKeys()]
+    list_of_hists = [hist.GetName() for hist in infiles[HistFile].GetListOfKeys()]
 
     for hist in list_of_hists:
         if "Inclusive" in hist or "ROverZ" not in hist:
             continue
 
         ijk = hist.split("_") #To get u (ieta), v (iphi), and layer
-        PhiVsROverZ = infiles[-1].Get(hist)
+        PhiVsROverZ = infiles[HistFile].Get(hist)
         nBinsPhi = PhiVsROverZ.GetNbinsY()        
 
         if "silicon" in hist:                            
@@ -278,6 +364,21 @@ def getHistsPerLayer(module_hists):
     f.Close()
         
     return histsPerLayer
+
+def getCMSSWNtupleName(HistFile):
+    #Small function to get name of the CMSSW TPG ntuple used to
+    #produce the HistFile containing histograms of TCs versus r/z
+    if not HistFile in infiles:
+        infiles[HistFile] = ROOT.TFile.Open(HistFile,"READ")
+
+    if not infiles[HistFile]:
+        raise EnvironmentError
+
+    name = ""
+    if "input_CMSSW_ntuple" in infiles[HistFile].GetListOfKeys():
+        name = infiles[HistFile].Get("input_CMSSW_ntuple")
+
+    return str(name)
 
 def getlpGBTLoadInfo(data,data_tcs_passing,data_tcs_passing_scin):
     #Loop over all lpgbts
@@ -551,6 +652,20 @@ def getTowerBundles(minigroups_towers, bundles, phisplit=None):
         all_bundles_towers.append(bundle_towers_phi_split)
         
     return all_bundles_towers
+
+def getMaxTowersList(minigroups_towers, bundles, phisplit=None):
+
+    #Return a list of the maximum number of towers seen over all bundles in the phi regions defined by phisplit
+    #phisplit is a list indicating the bin numbers in phi where a split must be made
+    bundled_towers = getTowerBundles(minigroups_towers, bundles, phisplit)
+
+    max_towers_list = []
+    n_phi_split = len(bundled_towers[0])
+    for i in range (n_phi_split):
+        bundled_towers_phi = [x[i] for x in bundled_towers]
+        max_towers_list.append(len(max(bundled_towers_phi,key=len)))#Get the length of bundle with the greatest number of towers in each phi_split region
+
+    return max_towers_list    
 
 def getMinilpGBTGroups(data, minigroup_type="minimal"):
 

@@ -2,18 +2,26 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
-def plot(variable,savename="hist.png",binwidth=1,xtitle='Number of words on a single lpGBT'):
+def plot(variable,savename="hist.png",binwidth=1,xtitle='Number of words on a single lpGBT',outdir="."):
+
+    if not os.path.isdir(outdir):
+        os.makedirs(outdir)
+
     fig = plt.figure()
     binwidth=binwidth
     plt.hist(variable, bins=np.arange(min(variable), max(variable) + binwidth, binwidth))
     plt.ylabel('Number of Entries')
     plt.xlabel(xtitle)
-    plt.savefig(savename)
+    plt.savefig(os.path.join(outdir, savename))
     
 
-def plot2D(variable_x,variable_y,savename="hist2D.png",binwidthx=1,binwidthy=1,xtitle='Number of words on a single lpGBT'):
-    
+def plot2D(variable_x,variable_y,savename="hist2D.png",binwidthx=1,binwidthy=1,xtitle='Number of words on a single lpGBT',outdir="."):
+
+    if not os.path.isdir(outdir):
+        os.makedirs(outdir)
+
     fig = plt.figure()
     binwidthx=binwidthx
     binwidthy=binwidthy
@@ -22,5 +30,5 @@ def plot2D(variable_x,variable_y,savename="hist2D.png",binwidthx=1,binwidthy=1,x
     plt.colorbar()
     plt.ylabel('Layer')
     plt.xlabel(xtitle)
-    plt.savefig(savename)
+    plt.savefig(os.path.join(outdir, savename))
 

@@ -4,12 +4,13 @@ sys.path.insert(1, './externals')
 import ROOT
 import numpy as np
 import mlrose_mod as mlrose # Author: Genevieve Hayes https://github.com/gkhayes/mlrose/tree/master/mlrose
-import time
 import yaml
 import signal
 import pickle
 import json
 import re
+import subprocess
+import random
 
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
@@ -17,14 +18,15 @@ from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.metrics import accuracy_score
 from _ctypes import PyObj_FromPtr
 
-from process import getModuleHists, getlpGBTHists, getMiniGroupHists, getMinilpGBTGroups, getMiniModuleGroups, getBundles, getBundledlpgbtHists, getBundledlpgbtHistsRoot, calculateChiSquared, getMaximumNumberOfModulesInABundle
-from process import loadDataFile, loadModuleTowerMappingFile, getTCsPassing, getlpGBTLoadInfo, getHexModuleLoadInfo, getModuleTCHists, getMiniTowerGroups, getTowerBundles
+from process import getModuleHists, getCMSSWNtupleName, getlpGBTHists, getMiniGroupHists, getMinilpGBTGroups, getMiniModuleGroups, getBundles, getBundledlpgbtHists, getBundledlpgbtHistsRoot, calculateChiSquared, getMaximumNumberOfModulesInABundle
+from process import loadDataFile, loadModuleTowerMappingFile, loadConfiguration, getTCsPassing, getlpGBTLoadInfo, getHexModuleLoadInfo, getModuleTCHists, getMiniTowerGroups, getMaxTowersList
 from plotting import plot, plot2D
 
 from geometryCorrections import applyGeometryCorrections
 
 chi2_min = 50000000000000000000000
 combbest = []
+nCallsToMappingMax = 0
 
 class exitProgramSignal(LookupError):
     pass
@@ -32,7 +34,16 @@ class exitProgramSignal(LookupError):
 def handler(signum, frame):
     raise exitProgramSignal()    
 
-def plot_lpGBTLoads(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
+def dummy_handler(signum, frame):
+    pass
+
+def plot_lpGBTLoads(Configuration):
+
+    subconfig = Configuration['plot_lpGBTLoads']
+    output_dir = Configuration['output_dir']
+    MappingFile = subconfig['MappingFile']
+    CMSSW_Silicon = subconfig['CMSSW_Silicon']
+    CMSSW_Scintillator = subconfig['CMSSW_Scintillator']
 
     #Load external data
     data = loadDataFile(MappingFile) #dataframe    
@@ -40,47 +51,46 @@ def plot_lpGBTLoads(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
     
     lpgbt_loads_tcs,lpgbt_loads_words,lpgbt_layers = getlpGBTLoadInfo(data,data_tcs_passing,data_tcs_passing_scin)
 
-    plot(lpgbt_loads_tcs,"loads_tcs.png",binwidth=0.1,xtitle='Number of TCs on a single lpGBT')
-    plot(lpgbt_loads_words,"loads_words.png",binwidth=0.1,xtitle='Number of words on a single lpGBT')
-    plot2D(lpgbt_loads_tcs,lpgbt_layers,"tcs_vs_layer.png",xtitle='Number of TCs on a single lpGBT')
-    plot2D(lpgbt_loads_words,lpgbt_layers,"words_vs_layer.png",xtitle='Number of words on a single lpGBT')
+    plot(lpgbt_loads_tcs,"loads_tcs.png",binwidth=0.1,xtitle='Number of TCs on a single lpGBT',outdir=output_dir)
+    plot(lpgbt_loads_words,"loads_words.png",binwidth=0.1,xtitle='Number of words on a single lpGBT',outdir=output_dir)
+    plot2D(lpgbt_loads_tcs,lpgbt_layers,"tcs_vs_layer.png",xtitle='Number of TCs on a single lpGBT',outdir=output_dir)
+    plot2D(lpgbt_loads_words,lpgbt_layers,"words_vs_layer.png",xtitle='Number of words on a single lpGBT',outdir=output_dir)
 
-def plot_ModuleLoads(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
+def plot_ModuleLoads(Configuration):
+
+    subconfig = Configuration['plot_ModuleLoads']
+    output_dir = Configuration['output_dir']
+    MappingFile = subconfig['MappingFile']
+    CMSSW_Silicon = subconfig['CMSSW_Silicon']
+    CMSSW_Scintillator = subconfig['CMSSW_Scintillator']
 
     #Load external data
     data = loadDataFile(MappingFile) #dataframe    
-    data_tcs_passing,data_tcs_passing_scin = getTCsPassing(CMSSW_Silicon,CMSSW_Scintillator) #from CMSSW
+    data_tcs_passing,data_tcs_passing_scin = getTCsPassing(CMSSW_Silicon,CMSSW_Scintillator) #from CMSSW    
+    module_loads_words,module_layers,u,v = getHexModuleLoadInfo(data,data_tcs_passing,data_tcs_passing_scin)
+
+    plot(module_loads_words,"module_loads_words.png",binwidth=0.01,xtitle=r'Average number of words on a single module / $2 \times N_{e-links}$',outdir=output_dir)
+    plot2D(module_loads_words,module_layers,"module_words_vs_layer.png",binwidthx=0.05,binwidthy=1,xtitle=r'Average number of words on a single module / $2 \times N_{e-links}$',outdir=output_dir)
     
-    lpgbt_loads_tcs,lpgbt_loads_words,lpgbt_layers = getHexModuleLoadInfo(data,data_tcs_passing,data_tcs_passing_scin)
+def produce_AllocationFile(Configuration):
 
-    plot(lpgbt_loads_tcs,"loads_tcs.png",binwidth=0.1,xtitle='Number of TCs on a single lpGBT')
-    plot(lpgbt_loads_words,"loads_words.png",binwidth=0.1,xtitle='Number of words on a single lpGBT')
-    plot2D(lpgbt_loads_tcs,lpgbt_layers,"tcs_vs_layer.png",xtitle='Number of TCs on a single lpGBT')
-    plot2D(lpgbt_loads_words,lpgbt_layers,"words_vs_layer.png",xtitle='Number of words on a single lpGBT')
+    subconfig = Configuration['produce_AllocationFile']
+    allocation = subconfig['allocation']
+    file_name = subconfig['file_name']
     
-def produce_AllocationFile(MappingFile,allocation,file_name="allocation.txt",minigroup_type="minimal",fpgaConfig=None):
-
-    #Load FPGA Information
-    if ( fpgaConfig != None ):
-        nBundles = fpgaConfig["nBundles"]
-        maxInputs = fpgaConfig["maxInputs"]
-    else:
-        #Set defaults
-        nBundles = 24
-        maxInputs = 72
-
-    #Load mapping file
-    data = loadDataFile(MappingFile) 
-
-    #List of which minigroups are assigned to each bundle 
-    with open(allocation, "rb") as filep:   
-        configuration = np.hstack(pickle.load(filep))
+    #Load allocation information
+    info = loadConfiguration(allocation)
+    data = info['data']
+    mapping = info['mapping']
+    minigroup_type = info['minigroup_type']
+    nBundles = info['nBundles']
+    maxInputs = info['maxInputs']
 
     #Get minigroups
     minigroups,minigroups_swap = getMinilpGBTGroups(data, minigroup_type)
 
     #Bundle together minigroup configuration
-    bundles = getBundles(minigroups_swap,configuration,nBundles,maxInputs)
+    bundles = getBundles(minigroups_swap,mapping,nBundles,maxInputs)
 
     #Open output file
     fileout = open(file_name, 'w')
@@ -145,29 +155,35 @@ class MyEncoder(json.JSONEncoder):
 
         return json_repr
     
-def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disconnected_modules=None,fpgaConfig=None):
+def produce_JsonMappingFile(Configuration):
 
-    #Load FPGA Information
-    if ( fpgaConfig != None ):
-        nBundles = fpgaConfig["nBundles"]
-        maxInputs = fpgaConfig["maxInputs"]
-    else:
-        #Set defaults
-        nBundles = 24
-        maxInputs = 72
-
-    #Load mapping file
-    data = loadDataFile(MappingFile)    
-
-    #List of which minigroups are assigned to each bundle 
-    with open(allocation, "rb") as filep:   
-        configuration = np.hstack(pickle.load(filep))
+    subconfig = Configuration['produce_JsonMappingFile']
+    allocation = subconfig['allocation']
+    output_name = subconfig['output_name']
+    disconnected_modules = None
+    if 'disconnected_modules' in subconfig.keys():
+        disconnected_modules = subconfig['disconnected_modules']
+    
+    #Load allocation information
+    info = loadConfiguration(allocation)
+    data = info['data']
+    mapping = info['mapping']
+    minigroup_type = info['minigroup_type']
+    nBundles = info['nBundles']
+    maxInputs = info['maxInputs']
+    configuration = info['configuration']
+    random_seed = info['random_seed']
+    nCallsToMappingMax = info['nCallsToMappingMax']
+    max_modules = info['max_modules']
+    cmsswNtuple = info['cmsswNtuple']
+    max_towers_phi_region = max(info['max_towers'])
+    git = info['git']
 
     #Get minigroups
     minigroups,minigroups_swap = getMinilpGBTGroups(data, minigroup_type)
     
     #Bundle together minigroup configuration
-    bundles = getBundles(minigroups_swap,configuration,nBundles,maxInputs)
+    bundles = getBundles(minigroups_swap,mapping,nBundles,maxInputs)
 
     #Open output file
     json_main = {}
@@ -178,7 +194,8 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
     #intialise empty list with number of minigroups
     lpgbtlist = [None]*len(minigroups)
     modulelist = []
-
+    config_output = {}
+    
     #1a) Stage 1 links to Stage 2 mapping (still preliminary)
     #Assume for now that the Stage 2 FPGA is attached to
     #two links from the current sector and one from the next sector
@@ -314,6 +331,17 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
             moduledict['lpgbts'] = [] #empty, i.e. not connected
             modulelist.append(NoIndent(moduledict))
 
+
+    #Save input configuration
+    config_output["hgcal-linkmapping-configuration"] = configuration
+    config_output["hgcal-linkmapping-randomseed"] = random_seed
+    config_output["hgcal-linkmapping-ncalls"] = nCallsToMappingMax
+    config_output["hgcal-linkmapping-maxmodules"] = max_modules
+    config_output["hgcal-linkmapping-maxtowersphiregion"] = max_towers
+    config_output["hgcal-linkmapping-cmsswntuple"] = cmsswNtuple
+    config_output["hgcal-linkmapping-gitrevision"] = git
+    
+    json_main['Config'] = config_output            
     json_main['Stage2'] = stage2list
     json_main['Stage1Links'] = stage1linkslist
     json_main['Stage1'] = stage1list
@@ -321,28 +349,24 @@ def produce_JsonMappingFile(MappingFile,allocation,minigroup_type="minimal",disc
     json_main['Module'] = modulelist
     
     #Write to file
-    with open("hgcal_trigger_link_mapping_v1.json", 'w') as fp:
+    with open(output_name, 'w') as fp:
         #data = json.dumps(json_main, indent=2, ensure_ascii=False)
         data = json.dumps(json_main, ensure_ascii=False, cls=MyEncoder, indent=4)
         fp.write(data)
     
-def produce_nTCsPerModuleHists(MappingFile,allocation,CMSSW_ModuleHists,minigroup_type="minimal",correctionConfig=None,fpgaConfig=None):
+def produce_nTCsPerModuleHists(Configuration):
 
-    #Load FPGA Information
-    if ( fpgaConfig != None ):
-        nBundles = fpgaConfig["nBundles"]
-        maxInputs = fpgaConfig["maxInputs"]
-    else:
-        #Set defaults
-        nBundles = 24
-        maxInputs = 72
-
-    #Load mapping file
-    data = loadDataFile(MappingFile) 
-
-    #List of which minigroups are assigned to each bundle 
-    with open(allocation, "rb") as filep:   
-        configuration = np.hstack(pickle.load(filep))
+    subconfig = Configuration['produce_nTCsPerModuleHists']
+    allocation = subconfig['allocation']
+    CMSSW_ModuleHists = subconfig['CMSSW_ModuleHists']
+    
+    #Load allocation information
+    info = loadConfiguration(allocation)
+    data = info['data']
+    mapping = info['mapping']
+    minigroup_type = info['minigroup_type']
+    nBundles = info['nBundles']
+    maxInputs = info['maxInputs']
 
     #Get minigroups
     minigroups,minigroups_swap = getMinilpGBTGroups(data, minigroup_type)
@@ -351,11 +375,11 @@ def produce_nTCsPerModuleHists(MappingFile,allocation,CMSSW_ModuleHists,minigrou
     minigroups_modules = getMiniModuleGroups(data,minigroups_swap)
     
     #Bundle together minigroup configuration
-    bundles = getBundles(minigroups_swap,configuration,nBundles,maxInputs)
+    bundles = getBundles(minigroups_swap,mapping,nBundles,maxInputs)
 
     #Get nTC hists per module
     module_hists = getModuleTCHists(CMSSW_ModuleHists)
-    
+
     #Open output file
     outfile = ROOT.TFile.Open("hists_per_bundle.root","RECREATE")
     for b,bundle in enumerate(bundles):
@@ -369,10 +393,23 @@ def produce_nTCsPerModuleHists(MappingFile,allocation,CMSSW_ModuleHists,minigrou
 
         outfile.cd()
 
+def check_for_missing_modules(Configuration):
+
+    subconfig = Configuration['check_for_missing_modules']
     
-def check_for_missing_modules_inMappingFile(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
+    if ( subconfig['inMappingFile'] ):
+        print("Missing modules in mapping file: "+ subconfig['MappingFile'] + "\n")
+        check_for_missing_modules_inMappingFile(subconfig)
+    if ( subconfig['inCMSSW'] ):
+        print("\nMissing modules in CMSSW\n")
+        check_for_missing_modules_inCMSSW(subconfig)
+            
+def check_for_missing_modules_inMappingFile(subconfig):
 
     #Check for modules missing in the mapping file
+    MappingFile = subconfig['MappingFile']
+    CMSSW_Silicon = subconfig['CMSSW_Silicon']
+    CMSSW_Scintillator = subconfig['CMSSW_Scintillator']
     
     #Load external data
     data = loadDataFile(MappingFile) #dataframe    
@@ -396,17 +433,60 @@ def check_for_missing_modules_inMappingFile(MappingFile,CMSSW_Silicon,CMSSW_Scin
     print ("Scintillator")
     print (onlycmssw_scin[onlycmssw_scin['nTCs']>0][['layer','u','v']].to_string(index=False))
 
-def check_for_missing_modules_inCMSSW(MappingFile,CMSSW_Silicon,CMSSW_Scintillator):
+def check_for_missing_modules_inCMSSW(subconfig):
+
+    MappingFile = subconfig['MappingFile']
+    CMSSW_Silicon = subconfig['CMSSW_Silicon']
+    CMSSW_Scintillator = subconfig['CMSSW_Scintillator']
 
     #Load external data
     data = loadDataFile(MappingFile) #dataframe    
     data_tcs_passing,data_tcs_passing_scin = getTCsPassing(CMSSW_Silicon,CMSSW_Scintillator) #from CMSSW
     getHexModuleLoadInfo(data,data_tcs_passing,data_tcs_passing_scin,True)
     
-    
+def study_mapping(Configuration):
 
-def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",initial_state="random",random_seed=None,max_iterations=100000,output_dir=".",print_level=0, minigroup_type="minimal", fpgaConfig=None, correctionConfig=None, phisplitConfig=None, chi2Config=None, TowerMappingFile=None, TowerPhiSplit=None):
+    #Get Git revision
+    try:
+        git = subprocess.check_output(["git", "rev-parse", "HEAD"]).strip().decode("utf-8")
+    except:
+        git = "no git repository detected"
+        
+    #Global settings
+    output_dir = Configuration['output_dir']
+    print_level = Configuration['print_level']
     
+    #Function specific settings
+    subconfig = Configuration['study_mapping']
+    MappingFile = subconfig['MappingFile']
+    CMSSW_ModuleHists = subconfig['CMSSW_ModuleHists']
+    algorithm = subconfig['algorithm']
+    initial_state = subconfig['initial_state']
+    max_iterations = subconfig['max_iterations']
+    max_calls = subconfig['max_calls']
+    minigroup_type = subconfig['minigroup_type']
+    TowerMappingFile = subconfig['TowerMappingFile']
+    TowerPhiSplit = subconfig['TowerPhiSplit']
+
+    random_seed = subconfig['random_seed']
+    if random_seed == None:
+        random_seed = random.randrange(2**32-1)
+    
+    fpgaConfig = None
+    correctionConfig = None
+    chi2Config = None
+    phisplitConfig = None
+    cmsswNtuple = ""
+    
+    if 'fpgas' in subconfig.keys():
+        fpgaConfig = subconfig['fpgas']
+    if 'corrections' in subconfig.keys():
+        correctionConfig = subconfig['corrections']
+    if 'chi2' in subconfig.keys():
+        chi2Config = subconfig['chi2']
+    if 'phisplit' in subconfig.keys():
+        phisplitConfig = subconfig['phisplit']            
+
     #Load external data
     data = loadDataFile(MappingFile) #dataframe
 
@@ -416,8 +496,8 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
         maxInputs = fpgaConfig["maxInputs"]
     else:
         #Set defaults
-        nBundles = 24
-        maxInputs = 72
+        nBundles = 14
+        maxInputs = 120
     
     try:
 
@@ -434,6 +514,7 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
                 phidivisionY_fixvalue_max = phisplitConfig['phidivisionY_fixvalue_max']
 
         inclusive_hists,module_hists = getModuleHists(CMSSW_ModuleHists, split = split, phidivisionX_fixvalue_min = phidivisionX_fixvalue_min, phidivisionY_fixvalue_max = phidivisionY_fixvalue_max)
+        cmsswNtuple = getCMSSWNtupleName(CMSSW_ModuleHists)
 
     except EnvironmentError:
         print ( "File " + CMSSW_ModuleHists + " does not exist" )
@@ -495,7 +576,8 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
     def mapping_max(state):
         global chi2_min
         global combbest
-
+        global nCallsToMappingMax
+    
         max_modules = None
         max_towers = None
         chi2 = 0
@@ -506,14 +588,7 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
         if include_max_modules_in_chi2:
             max_modules = getMaximumNumberOfModulesInABundle(minigroups_modules,bundles)
         if include_max_towers_in_chi2:
-            bundled_towers = getTowerBundles(minigroups_towers, bundles, TowerPhiSplit)
-            
-            max_towers_list = []
-            n_phi_split = len(bundled_towers[0])
-            for i in range (n_phi_split):
-                bundled_towers_phi = [x[i] for x in bundled_towers]
-                max_towers_list.append(len(max(bundled_towers_phi,key=len)))#Get the length of bundle with the greatest number of towers in each phi_split region
-
+            max_towers_list = getMaxTowersList(minigroups_towers, bundles, TowerPhiSplit)
             max_towers = max(max_towers_list)
 
         chi2 = calculateChiSquared(inclusive_hists,bundled_lpgbthists,nBundles,max_modules,max_modules_weighting_factor,max_towers,[max_towers_weighting_factor,max_towers_weighting_option,max_towers_step_point], weight_bins_proportionally)
@@ -533,14 +608,27 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
             if ( print_level > 1 ):
                 print (repr(combbest))
 
+        nCallsToMappingMax += 1
+        if max_calls != None:
+            if max_calls == nCallsToMappingMax:
+                raise exitProgramSignal
+        
         return chi2
 
     init_state = []
     if (initial_state[-4:] == ".npy"):
         print (initial_state)
-        with open(initial_state, "rb") as filep:   
-            init_state = np.hstack(pickle.load(filep))
-
+        previousConfig = loadConfiguration(initial_state)
+        init_state = previousConfig['mapping']
+        #Get the previous random seed, and number of calls
+        #to restart where previous run finished
+        #This does assume the rest of the config is the same
+        previousnCalls = previousConfig['nCallsToMappingMax']
+        previousRandomSeed = previousConfig['random_seed']    
+        global nCallsToMappingMax
+        nCallsToMappingMax += previousnCalls
+        np.random.seed(previousRandomSeed)
+        
         if ( len(init_state) != len(minigroups_swap) ):
             print ( "Initial state should be the same length as the number of mini groups")
             exit()
@@ -581,8 +669,6 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
 
         chi2 = calculateChiSquared(inclusive_hists,bundled_hists,nBundles,max_modules,max_modules_weighting_factor,max_towers,[max_towers_weighting_factor,max_towers_weighting_option,max_towers_step_point], weight_bins_proportionally)
         newfile = ROOT.TFile("bundles_roverz.root","RECREATE")
-        with open( output_dir + "/" + filename + ".npy", "wb") as filep:
-            pickle.dump(bundles, filep)
         for sector in bundled_hists_root:
             for key, value in sector.items():
                 value.Write()
@@ -613,9 +699,19 @@ def study_mapping(MappingFile,CMSSW_ModuleHists,algorithm="random_hill_climb",in
             print("interrupt received, stopping and saving")
 
         finally:
+            signal.signal(signal.SIGUSR1,dummy_handler) # avoid any interrupt when finalising
             bundles = getBundles(minigroups_swap,combbest,nBundles,maxInputs)
+            if include_max_modules_in_chi2:
+                max_modules = getMaximumNumberOfModulesInABundle(minigroups_modules,bundles)
+            else:
+                max_modules = 'Not used in chi2'
+            if include_max_towers_in_chi2:
+                max_towers_list = getMaxTowersList(minigroups_towers, bundles, TowerPhiSplit)
+            else:
+                max_towers_list = 'Not used in chi2'
             with open( output_dir + "/" + filename + ".npy", "wb") as filep:
-                pickle.dump(bundles, filep)
+                result_config_git = [bundles,subconfig,random_seed,nCallsToMappingMax,max_modules,max_towers_list,cmsswNtuple,git]
+                pickle.dump(result_config_git, filep)
             file1 = open(output_dir + "/chi2_"+filenumber+".txt","a")
             file1.write( "bundles[" + filenumber + "] = " + str(chi2_min) + "\n" )
             file1.close( )
@@ -644,64 +740,28 @@ def main():
     signal.signal(signal.SIGXCPU,handler)
 
     ROOT.TH1.SetDefaultSumw2()
+
+    function_choice = config['function']
     
-    if ( config['function']['study_mapping'] ):
-        subconfig = config['study_mapping']
-        correctionConfig = None
-        fpgaConfig = None
-        phisplitConfig = None
-        include_errors_in_chi2 = False
-        include_max_modules_in_chi2 = False
-        if 'fpgas' in config.keys():
-            fpgaConfig = config['fpgas']
-        if 'corrections' in config.keys():
-            correctionConfig = config['corrections']
-        if 'chi2' in subconfig.keys():
-            chi2Config = subconfig['chi2']
-        if 'phisplit' in subconfig.keys():
-            phisplitConfig = subconfig['phisplit']
-        
-            
-        study_mapping(subconfig['MappingFile'],subconfig['CMSSW_ModuleHists'],algorithm=subconfig['algorithm'],initial_state=subconfig['initial_state'],random_seed=subconfig['random_seed'],max_iterations=subconfig['max_iterations'],output_dir=config['output_dir'],print_level=config['print_level'],
-                      minigroup_type=subconfig['minigroup_type'],fpgaConfig = fpgaConfig,correctionConfig = correctionConfig,phisplitConfig=phisplitConfig,chi2Config=chi2Config,TowerMappingFile=subconfig['TowerMappingFile'],TowerPhiSplit=subconfig['TowerPhiSplit']
-            )
+    if ( function_choice['study_mapping'] ):                    
+        study_mapping(config)
 
+    if ( function_choice['check_for_missing_modules'] ):
+        check_for_missing_modules(config)
 
-    if ( config['function']['check_for_missing_modules'] ):
-        subconfig = config['check_for_missing_modules']
-        if ( subconfig['inMappingFile'] ):
-            print("Missing modules in mapping file: "+ subconfig['MappingFile'] + "\n")
-            check_for_missing_modules_inMappingFile(subconfig['MappingFile'],subconfig['CMSSW_Silicon'],subconfig['CMSSW_Scintillator'])
-        if ( subconfig['inCMSSW'] ):
-            print("\nMissing modules in CMSSW\n")
-            check_for_missing_modules_inCMSSW(subconfig['MappingFile'],subconfig['CMSSW_Silicon'],subconfig['CMSSW_Scintillator'])
+    if ( function_choice['plot_lpGBTLoads'] ):
+        plot_lpGBTLoads(config)
 
-    if ( config['function']['plot_lpGBTLoads'] ):
-        subconfig = config['plot_lpGBTLoads']
-        plot_lpGBTLoads(subconfig['MappingFile'],subconfig['CMSSW_Silicon'],subconfig['CMSSW_Scintillator'])
+    if ( function_choice['plot_ModuleLoads'] ):
+        plot_ModuleLoads(config)
 
-    if ( config['function']['plot_ModuleLoads'] ):
-        subconfig = config['plot_ModuleLoads']
-        plot_ModuleLoads(subconfig['MappingFile'],subconfig['CMSSW_Silicon'],subconfig['CMSSW_Scintillator'])
+    if ( function_choice['produce_AllocationFile'] ):
+        produce_AllocationFile(config)
 
-    if ( config['function']['plot_ModuleLoads'] ):
-        subconfig = config['plot_ModuleLoads']
-        plot_ModuleLoads(subconfig['MappingFile'],subconfig['CMSSW_Silicon'],subconfig['CMSSW_Scintillator'])
+    if ( function_choice['produce_nTCsPerModuleHists'] ):
+        produce_nTCsPerModuleHists(config)
 
-    if ( config['function']['produce_AllocationFile'] ):
-        subconfig = config['produce_AllocationFile']
-        produce_AllocationFile(subconfig['MappingFile'],subconfig['allocation'],file_name=subconfig['file_name'],minigroup_type=subconfig['minigroup_type'],fpgaConfig=config['fpgas'])
-
-    if ( config['function']['produce_nTCsPerModuleHists'] ):
-        subconfig = config['produce_nTCsPerModuleHists']
-        produce_nTCsPerModuleHists(subconfig['MappingFile'],subconfig['allocation'],CMSSW_ModuleHists = subconfig['CMSSW_ModuleHists'],minigroup_type=subconfig['minigroup_type'],correctionConfig=None,fpgaConfig=config['fpgas'])
-
-    if ( config['function']['produce_JsonMappingFile'] ):
-        subconfig = config['produce_JsonMappingFile']
-        disconnected_modules = None
-        if 'disconnected_modules' in subconfig.keys():
-            disconnected_modules = subconfig['disconnected_modules']
-        produce_JsonMappingFile(subconfig['MappingFile'],subconfig['allocation'],minigroup_type=subconfig['minigroup_type'],disconnected_modules=disconnected_modules,fpgaConfig=config['fpgas'])
-
+    if ( function_choice['produce_JsonMappingFile'] ):
+        produce_JsonMappingFile(config)
     
 main()

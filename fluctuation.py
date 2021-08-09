@@ -9,7 +9,7 @@ from matplotlib.colors import LogNorm
 import math
 import pickle
 from scipy import optimize
-from process import loadDataFile
+from process import loadDataFile,loadConfiguration
 from process import getPhiSplitIndices
 from process import getMinilpGBTGroups,getBundles,getBundledlpgbtHists,getMiniModuleGroups
 from rotate import rotate_to_sector_0
@@ -160,26 +160,60 @@ def etaphiMapping(layer, etaphi, mappingFile):
         
     return [ep,pp],sector
 
-def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata,truncation_values, TCratio, roverzBinning, nLinks):
+def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata, truncation_options, roverzBinning):
 
-    #truncation_values is a list containing the truncation_options to study.
+    #truncation_options is a list containing the truncation_options to study.
     #an element is inserted such that the sum without truncation is also available
-    truncation_max = np.full(len(truncation_values[0]),1000)
 
-    truncation_values_loop = truncation_values.copy()
+    TCratio = []
+    predetermined_values = []
+    regionADefinitions = []
+    regionBDefinitions = []
+    definitionOptions = ['X', 'Y', 'X+Y']
+    
+    for option in truncation_options:
+        if 'regionADefinition' in option.keys():
+            if option['regionADefinition'] in definitionOptions:
+                regionADefinitions.append(option['regionADefinition'])
+            else:
+                print ("Not a valid option for regionADefinition, assuming regionADefinition==X")
+                regionADefinitions.append('X')
+        else:
+            print ("regionADefinition not given, assuming regionADefinition==X")
+            regionADefinitions.append('X')
+
+        if 'regionBDefinition' in option.keys():
+            if option['regionBDefinition'] in definitionOptions:
+                regionBDefinitions.append(option['regionBDefinition'])
+            else:
+                print ("Not a valid option for regionBDefinition, assuming regionBDefinition==Y")
+                regionBDefinitions.append('Y')
+        else:
+            print ("regionBDefinition not given, assuming regionBDefinition==Y")
+            regionBDefinitions.append('Y')
+            
+        TCratio.append(option['maxTCsA']/option['maxTCsB'])
+        predetermined_values.append(option['predetermined_values'])
+        
+    truncation_max = np.full(len(predetermined_values[0]),1000)
+
+    truncation_values_loop = predetermined_values.copy()
     TCratio_loop = TCratio.copy()
-    nLinks_loop = nLinks.copy()
+    regionADefinitions_loop = regionADefinitions.copy()
+    regionBDefinitions_loop = regionBDefinitions.copy()
     truncation_values_loop.insert( 0, truncation_max )
     TCratio_loop.insert( 0, 1. )
-    nLinks_loop.insert( 0, 4 )#The two phi divisions are saved independently, so both options can be recreated later
-
+    #The two phi divisions are saved independently, so both options can be recreated later
+    regionADefinitions_loop.insert( 0, "X" )
+    regionBDefinitions_loop.insert( 0, "Y" )
+    
     alldata = [] #Output list
 
-    for a,(truncation,ratio,links) in enumerate(zip(truncation_values_loop,TCratio_loop,nLinks_loop)):
+    for a,(truncation,ratio,adef,bdef) in enumerate(zip(truncation_values_loop,TCratio_loop,regionADefinitions_loop,regionBDefinitions_loop)):
         
         bundled_pt_hists_truncated = []
 
-        #Need to consider phi regions at the same time, as the relevant "A" region might be inclusive in phi
+        #Need to consider phi regions at the same time, as the relevant "A" or "B" region might be inclusive in phi
         regionA_truncated_summed = np.zeros(len(roverzBinning)-1)
         regionB_truncated_summed = np.zeros(len(roverzBinning)-1)
         
@@ -190,15 +224,28 @@ def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata,truncation_values, TCratio
             phidivisionX = np.asarray(bundled_tc_Pt_rawdata[0][b])
             phidivisionY = np.asarray(bundled_tc_Pt_rawdata[1][b])
             inclusive = np.asarray(bundled_tc_Pt_rawdata[0][b] + bundled_tc_Pt_rawdata[1][b])
-
+                       
             #Find out how many TCs should be truncated
             #Bin the raw pT data
-            if links == 3:
-                digitised_regionA_rawdata = np.digitize(inclusive[:,0],roverzBinning)
-            elif links == 4:
-                digitised_regionA_rawdata = np.digitize(phidivisionX[:,0],roverzBinning)
-            digitised_regionB_rawdata = np.digitize(phidivisionY[:,0],roverzBinning)
+            if adef == "X":
+                regionA = phidivisionX[:]
+            elif adef == "Y":
+                regionA = phidivisionY[:]
+            elif  adef == "X+Y":
+                regionA = inclusive[:]
+            #Should not be any further possibilities
+            
+            if bdef == "X":
+                regionB = phidivisionX[:]
+            elif bdef == "Y":
+                regionB = phidivisionY[:]
+            elif  bdef == "X+Y":
+                regionB = inclusive[:]
+            #Should not be any further possibilities
 
+            digitised_regionA_rawdata = np.digitize(regionA[:,0],roverzBinning)
+            digitised_regionB_rawdata = np.digitize(regionB[:,0],roverzBinning)                
+            
             sumPt_truncated_regionA = np.zeros(len(roverzBinning)-1)
             sumPt_truncated_regionB = np.zeros(len(roverzBinning)-1)
 
@@ -206,12 +253,8 @@ def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata,truncation_values, TCratio
 
             for roverz in range(len(roverzBinning)-1):
                 #Get the pT values for the relevant R/Z bin
-                if links == 3:
-                    pt_values_regionA = inclusive[digitised_regionA_rawdata==roverz+1][:,1] #roverz+1 to convert from index to digitised bin number
-                elif links == 4:
-                    pt_values_regionA = phidivisionX[digitised_regionA_rawdata==roverz+1][:,1] #roverz+1 to convert from index to digitised bin number
-                pt_values_regionB = phidivisionY[digitised_regionB_rawdata==roverz+1][:,1] 
-
+                pt_values_regionA = regionA[digitised_regionA_rawdata==roverz+1][:,1] #roverz+1 to convert from index to digitised bin number
+                pt_values_regionB = regionB[digitised_regionB_rawdata==roverz+1][:,1] 
                 #Get the number to be truncated in each region in an R/Z bin
                 number_truncated_regionA = int(max(0,len(pt_values_regionA)-truncation[roverz]))
                 if ( ratio.is_integer() ):
@@ -250,7 +293,7 @@ def applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata,truncation_values, TCratio
     return alldata
 
 
-def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="alldata", fpgaConfig = None, tcPtConfig=None, correctionConfig=None, phisplitConfig=None, truncationConfig = None, binningConfig = None, save_ntc_hists=False, beginEvent = -1, endEvent = -1):
+def checkFluctuations(initial_state, cmsswNtuple, outputName="alldata", tcPtConfig=None, truncationConfig = None, binningConfig = None, save_ntc_hists=False, beginEvent = -1, endEvent = -1):
 
     if ( binningConfig != None ):        
         nROverZBins = binningConfig["nROverZBins"]
@@ -259,28 +302,26 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
     else:
         #Set defaults
         nROverZBins = 42
-        rOverZMin = 0.076
-        rOverZMax = 0.58
-
-    if ( fpgaConfig != None ):
-        nBundles = fpgaConfig["nBundles"]
-        maxInputs = fpgaConfig["maxInputs"]
-    else:
-        #Set defaults
-        nBundles = 24
-        maxInputs = 72
+        rOverZMin = 0.07587128
+        rOverZMax = 0.55563514
 
     #To get binning for r/z histograms
     inclusive_hists = np.histogram( np.empty(0), bins = nROverZBins, range = (rOverZMin,rOverZMax) )
     roverzBinning = inclusive_hists[1]
-    
-    #List of which minigroups are assigned to each bundle 
-    init_state = np.hstack(np.load(initial_state,allow_pickle=True))
 
+    #Load allocation information
+    info = loadConfiguration(initial_state)
+    data = info['data']
+    init_state = info['mapping']
+    nBundles = info['nBundles']
+    maxInputs = info['maxInputs']
+    mappingFile = info['configuration']['MappingFile']
+    phisplitConfig = info['phisplitConfig']
+    correctionConfig = info['correctionConfig']
+    CMSSW_ModuleHists = info['CMSSW_ModuleHists']
+    
     #Load the truncation options, if need to truncate based on E_T when running over ntuple (save_sum_tcPt == True)
     truncation_options = []
-    ABratios = []
-    nLinks = []
     save_sum_tcPt = False
     if ( tcPtConfig != None ):
         save_sum_tcPt = tcPtConfig['save_sum_tcPt']
@@ -288,16 +329,11 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
             options_to_study = tcPtConfig['options_to_study']
             if ( truncationConfig != None ):
                 for option in options_to_study:
-                    truncation_options.append(truncationConfig['option'+str(option)]['predetermined_values'])
-                    ABratios.append(truncationConfig['option'+str(option)]['maxTCsA']/truncationConfig['option'+str(option)]['maxTCsB'])
-                    nLinks.append(truncationConfig['option'+str(option)]['nLinks'])
+                    truncation_options.append(truncationConfig['option'+str(option)])
 
     #Load the CMSSW ntuple to get per event and per trigger cell information
     rootfile = ROOT.TFile.Open( cmsswNtuple , "READ" )
     tree = rootfile.Get("HGCalTriggerNtuple")
-
-    #Load mapping file
-    data = loadDataFile(mappingFile) 
 
     max_ieta = 2 #Definition of a scintillator module is different between V7 and TpgV7 mapping files 
     if "FeMappingV7" in mappingFile:
@@ -335,8 +371,8 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
             phi_split_phidivisionX = np.full( nROverZBins, np.radians(phisplitConfig['phidivisionX_fixvalue_min']) )
             phi_split_phidivisionY = np.full( nROverZBins, np.radians(phisplitConfig['phidivisionY_fixvalue_max']) )
         else:
-            file_roverz_inclusive = ROOT.TFile(str(phisplitConfig['splitfile']),"READ")
-            PhiVsROverZ_Total = file_roverz_inclusive.Get("ROverZ_Inclusive" )
+            file_roverz_inclusive = ROOT.TFile(CMSSW_ModuleHists,"READ")
+            PhiVsROverZ_Total = file_roverz_inclusive.Get("ROverZ_Inclusive")
             split_indices_phidivisionX = getPhiSplitIndices( PhiVsROverZ_Total, split = "per_roverz_bin")
             split_indices_phidivisionY = getPhiSplitIndices( PhiVsROverZ_Total, split = "per_roverz_bin")
             phi_split_phidivisionX = np.zeros( nROverZBins )
@@ -507,9 +543,7 @@ def checkFluctuations(initial_state, cmsswNtuple, mappingFile, outputName="allda
                         bundled_tc_Pt_rawdata = getBundledTCPtRawData(minigroup_tc_Pt_rawdata,bundles)
 
                         #Get histograms of (truncated) sum pT per r/z bin
-                        bundled_pt_hists = applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata,
-                                                                       truncation_options,
-                                                                       ABratios,roverzBinning,nLinks)
+                        bundled_pt_hists = applyTruncationAndGetPtSums(bundled_tc_Pt_rawdata, truncation_options, roverzBinning)
 
                         bundled_pt_hists_allevents.append(bundled_pt_hists)
 
@@ -561,20 +595,13 @@ def main():
         binningConfig = config['binningConfig']
 
     if (config['function']['checkFluctuations']):
-        correctionConfig = None
-        if 'corrections' in config.keys():
-            correctionConfig = config['corrections']
-        tcPtConfig = None
-
         subconfig = config['checkFluctuations']
+        
+        tcPtConfig = None
         if 'tcPtConfig' in subconfig.keys():
             tcPtConfig = subconfig['tcPtConfig']
 
-        fpgaConfig = None
-        if 'fpgas' in subconfig.keys():
-            fpgaConfig = subconfig['fpgas']
-
-        checkFluctuations(initial_state=subconfig['initial_state'], cmsswNtuple=subconfig['cmsswNtuple'], mappingFile=subconfig['mappingFile'], outputName=subconfig['outputName'], fpgaConfig = fpgaConfig, tcPtConfig = tcPtConfig, correctionConfig = correctionConfig, phisplitConfig = subconfig['phisplit'], truncationConfig = truncationConfig, binningConfig = binningConfig, save_ntc_hists=subconfig['save_ntc_hists'], beginEvent = subconfig['beginEvent'], endEvent = subconfig['endEvent'])
+        checkFluctuations(initial_state=subconfig['initial_state'], cmsswNtuple=subconfig['cmsswNtuple'], outputName=subconfig['outputName'], tcPtConfig = tcPtConfig, truncationConfig = truncationConfig, binningConfig = binningConfig, save_ntc_hists=subconfig['save_ntc_hists'], beginEvent = subconfig['beginEvent'], endEvent = subconfig['endEvent'])
 
     #Plotting functions
     
