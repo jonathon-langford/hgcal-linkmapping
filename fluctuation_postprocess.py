@@ -460,7 +460,7 @@ def studyTruncationOptions(eventData, options_to_study, truncation_values_method
                 regionB_bundled_lpgbthists_allevents.append(phidivisionY_bundled_lpgbthists_allevents)
         else:
             print ("regionBDefinition not given, assuming regionBDefinition==Y")
-                regionB_bundled_lpgbthists_allevents.append(phidivisionY_bundled_lpgbthists_allevents)
+            regionB_bundled_lpgbthists_allevents.append(phidivisionY_bundled_lpgbthists_allevents)
             
         if truncation_values_method == "original":
             truncation_values.append( getTruncationValuesRoverZ(regionA_bundled_lpgbthists_allevents[-1],regionB_bundled_lpgbthists_allevents[-1],truncation_options[-1]['maxTCsA'],truncation_options[-1]['maxTCsB']) )
