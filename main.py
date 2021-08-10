@@ -176,7 +176,7 @@ def produce_JsonMappingFile(Configuration):
     nCallsToMappingMax = info['nCallsToMappingMax']
     max_modules = info['max_modules']
     cmsswNtuple = info['cmsswNtuple']
-    max_towers_phi_region = max(info['max_towers'])
+    max_towers_phi_region = info['max_towers_list']
     git = info['git']
 
     #Get minigroups
@@ -337,7 +337,7 @@ def produce_JsonMappingFile(Configuration):
     config_output["hgcal-linkmapping-randomseed"] = random_seed
     config_output["hgcal-linkmapping-ncalls"] = nCallsToMappingMax
     config_output["hgcal-linkmapping-maxmodules"] = max_modules
-    config_output["hgcal-linkmapping-maxtowersphiregion"] = max_towers
+    config_output["hgcal-linkmapping-maxtowersphiregion"] = max_towers_phi_region
     config_output["hgcal-linkmapping-cmsswntuple"] = cmsswNtuple
     config_output["hgcal-linkmapping-gitrevision"] = git
     
