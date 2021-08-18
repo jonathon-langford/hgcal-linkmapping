@@ -1,0 +1,55 @@
+function:
+  study_mapping: True
+  check_for_missing_modules: False
+  plot_lpGBTLoads: False
+  plot_ModuleLoads: False               
+  produce_AllocationFile: False               
+  produce_nTCsPerModuleHists: False
+  produce_JsonMappingFile: False
+
+print_level: 1
+output_dir: .
+
+study_mapping:
+  MappingFile: data/FeMappingTpgV7.txt
+  CMSSW_ModuleHists: data/ROverZHistograms_v11_relval_ttbar_20210518.root
+  TowerMappingFile: data/tower_per_module-20210517-Silic8-Scint16.txt
+  TowerPhiSplit: [6,15]
+
+  #algorithm: save_root
+  algorithm: random_hill_climb
+  # algorithm: simulated_annealing
+  # algorithm: genetic_alg      
+
+  initial_state: random
+  random_seed: RANDOMSEED_TEMPLATE
+  max_iterations: 250000
+  max_calls: ~
+  #minigroup_type: 'bylayer_silicon_seprated'
+  #minigroup_type: 'bylayer'
+  minigroup_type: 'minimal'
+  weight_bins_proportionally: True 
+  chi2:
+    include_errors_in_chi2: True
+    include_max_modules_in_chi2: True
+    include_max_towers_in_chi2: True
+    max_modules_weighting_factor: MAXMODWEIGHT
+    max_towers_weighting_factor: MAXTOWERWEIGHT
+    max_towers_weighting_option: 2
+    max_towers_step_point: 380 
+    weight_bins_proportionally: True 
+
+  phisplit:
+    type: per_roverz_bin
+    #type: fixed
+    RegionA_fixvalue_min: 30 #degrees
+    RegionB_fixvalue_max: 90 #degrees
+
+  corrections:
+    nTCCorrectionFile: 'data/different_nTCs_linkMapping.txt'
+  
+  fpgas:
+    #Number of stage 1 FPGAs covering a sector
+    nBundles: 14
+    #Maximum number of lpGBT inputs to each FPGA
+    maxInputs: 120

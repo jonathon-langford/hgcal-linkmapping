@@ -1,0 +1,150 @@
+function:
+  checkFluctuations: True
+  plot_MeanMax: False
+  plot_Truncation: False
+  studyTruncationOptions: False
+  plot_Truncation_tc_Pt: False
+
+print_level: 0
+#output_dir: plots/neutrino_gun_200722_perphi
+#output_dir: plots/20200722/ttbar_fixed55
+output_dir: plots/20210511/ttbar_perphi
+
+corrections:
+  ldmToHdmModuleCorrectionFile: 'data/different_moduleType_HDMInMappingFile_linkMapping.txt'
+  ldmToHdmCorrectionType: 'FixedOcc'
+  nTCCorrectionFile: 'data/different_nTCs_linkMapping.txt'
+
+binningConfig:
+  nROverZBins: 42
+  rOverZMin: 0.07587128
+  rOverZMax: 0.55563514
+
+truncationConfig:
+  option1:
+    maxTCsA: 200
+    maxTCsB: 200
+    nLinks: 3
+    regionADefinition: X #X, Y or X+Y
+    regionBDefinition: Y #X, Y or X+Y
+    nLinks: 3
+    predetermined_values: [ 2,  7, 32, 25, 24, 20, 17, 16, 15, 14, 13, 14, 13, 12, 11, 11, 10,
+       10, 10, 10,  9,  9,  9,  9,  8,  8,  8,  8,  7,  7,  6,  5,  3,  3,
+        2,  2,  2,  2,  2,  3,  1,  1]
+  option2:
+    maxTCsA: 400
+    maxTCsB: 302
+    nLinks: 3
+    predetermined_values: [ 2.,  7., 35., 26., 21., 18., 16., 16., 15., 14., 13., 13., 13.,
+       12., 11., 11., 10., 10.,  9.,  9., 10.,  9.,  9.,  9.,  8.,  8.,
+        8.,  8.,  7.,  7.,  6.,  4.,  3.,  3.,  3.,  3.,  3.,  3.,  2.,
+        2.,  2.,  2.]
+    #predetermined_values: [ 1.,  6., 16., 14., 17., 13., 13., 17., 19., 12., 10., 14., 12.,
+    #   12., 13., 12., 12., 14., 12., 11., 10., 13., 11., 12., 14., 12.,
+    #    9.,  9.,  9., 10., 12.,  8.,  4.,  4.,  2.,  3.,  3.,  2.,  1.,
+    #    1.,  0.,  0.]
+  option3:
+    maxTCsA: 714
+    maxTCsB: 357
+    nLinks: 3
+    predetermined_values: [ 2., 15., 62., 46., 37., 31., 29., 29., 26., 23., 23., 24., 23.,
+       21., 21., 21., 19., 19., 19., 16., 16., 16., 17., 16., 16., 17.,
+       14., 14., 14., 14., 11.,  9.,  5.,  4.,  4.,  4.,  4.,  4.,  3.,
+        2.,  2.,  2.]
+    # predetermined_values: [ 1., 12., 26., 23., 31., 23., 21., 30., 34., 20., 18., 25., 23.,
+    #    23., 24., 21., 22., 25., 23., 19., 18., 23., 20., 23., 25., 22.,
+    #    17., 17., 16., 18., 22., 14.,  6.,  6.,  5.,  5.,  5.,  3.,  3.,
+    #     2.,  0.,  0.]
+  option4:
+    maxTCsA: 466
+    maxTCsB: 466
+    nLinks: 4
+    predetermined_values: [ 2.,  9., 39., 32., 25., 21., 20., 18., 17., 16., 16., 14., 14.,
+       14., 14., 13., 13., 11., 11., 11., 10., 10., 10., 10., 10., 10.,
+       10., 10.,  9.,  8.,  7.,  5.,  3.,  4.,  3.,  3.,  3.,  3.,  2.,
+        2.,  2.,  2.]
+    # predetermined_values: [ 1.,  6., 16., 14., 19., 13., 15., 17., 15., 16., 15., 14., 15.,
+    #    15., 15., 20., 17., 21., 17., 13., 14., 21., 15., 13., 15., 15.,
+    #    12., 14., 11., 10.,  8.,  7.,  3.,  4.,  2.,  2.,  2.,  2.,  1.,
+    #     1.,  0.,  0.]
+  option5:
+    maxTCsA: 780
+    maxTCsB: 780
+    nLinks: 4
+    predetermined_values: [ 2., 15., 66., 54., 43., 36., 34., 32., 30., 27., 27., 25., 24.,
+       24., 24., 22., 22., 20., 20., 20., 17., 17., 17., 17., 16., 15.,
+       15., 15., 14., 14., 12.,  9.,  5.,  6.,  4.,  4.,  4.,  4.,  2.,
+        2.,  2.,  2.]
+    # predetermined_values: [ 2., 10., 28., 24., 32., 22., 25., 28., 26., 27., 25., 23., 26.,
+    #    25., 24., 34., 28., 35., 28., 22., 24., 34., 24., 21., 26., 24.,
+    #    20., 24., 18., 16., 14., 11.,  5.,  6.,  4.,  3.,  4.,  3.,  2.,
+    #     2.,  0.,  0.]
+  option7:
+    maxTCsA: 420
+    maxTCsB: 210
+    nLinks: 3
+    predetermined_values: [41, 79, 48, 40, 36, 34, 31, 29, 28, 26, 14,  6,  5,  3]
+    # predetermined_values: [ 2,  7, 33, 25, 24, 21, 18, 16, 16, 15, 14, 15, 14, 13, 12, 12, 11,
+    #    11, 10, 10, 10, 10, 10,  9,  9,  9,  9,  9,  8,  8,  7,  5,  3,  3,
+    #     2,  2,  2,  2,  2,  2,  0,  0]
+  option8:
+    maxTCsA: 486
+    maxTCsB: 243
+    nLinks: 3
+    predetermined_values: [ 44, 85, 53, 46, 42, 40, 38, 36, 36, 32, 18,  7,  6,  3 ]
+    # predetermined_values: [ 3,  8, 36, 28, 27, 23, 19, 18, 18, 16, 16, 16, 15, 14, 13, 13, 12,
+    #    12, 12, 12, 11, 11, 11, 11, 11, 11, 10, 10, 10,  9,  8,  7,  5,  4,
+    #     4,  4,  4,  4,  4,  4,  1,  1]
+    
+checkFluctuations:
+  beginEvent: START
+  endEvent: FINISH
+  #initial_state: bundles_job_neutrino_gun_20200626.npy
+  #initial_state: bundles_job_phi3090_200805.npy  
+  #initial_state: data/bundles_example-pickle-tpgv7.npy
+  initial_state: data/best380.npy
+  #cmsswNtuple: data/small_v11_relval_neutrino_gun_200807.root
+  cmsswNtuple: data/small_v11_relval_ttbar_200807.root
+  #outputName: alldata_ttbar_200722_fixed55
+  outputName: OUTNAME
+  mappingFile: data/FeMappingTpgV7.txt
+  save_ntc_hists: False
+
+  tcPtConfig:
+    save_sum_tcPt: False
+    options_to_study: [1,7,8]
+    #options_to_study: [4,5]
+
+  fpgas:
+    nBundles: 14
+    maxInputs: 120
+
+  phisplit:
+    #type: fixed
+    type: per_roverz_bin
+    splitfile: data/ROverZHistograms_v11_relval_ttbar_20210518.root
+    phidivisionX_fixvalue_min: 75 #degrees
+    phidivisionY_fixvalue_max: 45 #degrees
+  
+plot_MeanMax:
+  #eventData: alldata_ttbar_200722_1_bk.txt
+  eventData: alldata_ttbar_200722_fixed55.txt
+  #eventData: data/alldata_ttbar_2006022.txt
+  #eventData: alldata_neutrino_gun_200722_perphi.txt
+  includePhi60: True
+  
+plot_Truncation:
+  #eventData: alldata_ttbar_200722_1_bk.txt
+  #eventData: alldata_ttbar_200722_fixed55.txt
+  eventData: alldata_neutrino_gun_200722_perphi.txt
+  #eventData: alldata_neutrino_gun_2006026.txt
+  #eventData: data/alldata_ttbar_2006022.txt
+  includePhi60: False
+
+studyTruncationOptions:
+  eventData: data/alldata_neutrino_gun_2006022.txt
+  options_to_study: [1,2,3,4,5]
+
+plot_Truncation_tc_Pt:
+  eventData: data/alldata_ttbar_200813_sumpt.txt
+  options_to_study: [1,2,3]
